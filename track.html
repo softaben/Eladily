@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Your Order - Eldavily Cosmetics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header id="main-header" class="sticky top-0 bg-[#f8f5f2]/80 backdrop-blur-sm z-50"></header>
+    
+    <main class="container mx-auto px-6 py-24">
+        <div class="max-w-xl mx-auto text-center">
+            <h1 class="text-4xl md:text-5xl mb-6">Track Your Order</h1>
+            <p class="text-gray-600 mb-8">Enter your Order ID below to check the status of your shipment.</p>
+            <form id="track-form" class="flex flex-col md:flex-row gap-2">
+                <input type="text" id="order-id-input" placeholder="Enter your Order ID (e.g., ELD-123456)" class="p-3 border rounded w-full flex-grow focus:ring-2 focus:ring-slate-400 focus:outline-none">
+                <button type="submit" class="bg-slate-800 text-white p-3 rounded hover:bg-slate-700 transition">Track</button>
+            </form>
+            <div id="order-status-result" class="mt-8 text-left bg-white p-6 shadow-md min-h-[100px]">
+                </div>
+        </div>
+    </main>
+
+    <script src="js/datastore.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/track.js"></script>
+</body>
+</html>
