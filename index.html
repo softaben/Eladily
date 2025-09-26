@@ -3,33 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eldavily Cosmetics - Elegance in a Bottle</title>
+    <title>Eldavily - Elegance in a Bottle</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Montserrat:wght@400;500&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Montserrat', sans-serif; background-color: #f8f5f2; color: #2a2a2a; }
-        h1, h2, h3, h4, h5, h6 { font-family: 'Cormorant Garamond', serif; }
-        .fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
-        .fade-in.appear { opacity: 1; transform: translateY(0); }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-
-    <header class="sticky top-0 bg-[#f8f5f2]/80 backdrop-blur-sm z-50">
-        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <div class="text-3xl font-bold tracking-widest">
-                <a href="index.html">ELDAVILY</a>
-            </div>
-            <div class="hidden md:flex space-x-10 items-center text-sm tracking-wider">
-                <a href="shop.html" class="hover:text-[#6b705c] transition-colors">SHOP</a>
-                <a href="#" class="hover:text-[#6b705c] transition-colors">OUR STORY</a>
-                <a href="admin.html" class="hover:text-[#6b705c] transition-colors">ADMIN</a>
-            </div>
-            </nav>
-    </header>
-
+    <header id="main-header" class="sticky top-0 bg-[#f8f5f2]/80 backdrop-blur-sm z-50"></header>
+    
     <main>
         <section class="h-screen bg-cover bg-center flex items-end pb-20" style="background-image: url('https://images.unsplash.com/photo-1620005759956-785d1c3a451e?q=80&w=1887&auto=format&fit=crop');">
             <div class="container mx-auto px-6 text-left text-white">
@@ -38,44 +18,16 @@
                 <a href="shop.html" class="bg-white text-black py-3 px-10 text-md tracking-wider hover:bg-opacity-90 transition duration-300 fade-in" style="transition-delay: 400ms;">EXPLORE</a>
             </div>
         </section>
-
+        
         <section class="py-24 bg-[#e9e4dc]">
             <div class="container mx-auto px-6 text-center">
                 <h2 class="text-4xl mb-4 fade-in">Inspired By Nature, Perfected For You</h2>
-                <p class="max-w-3xl mx-auto text-gray-600 mb-16 fade-in">Every bottle holds a story. A journey of rare ingredients and meticulous craftsmanship. We believe in beauty that is both timeless and personal.</p>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div class="fade-in">
-                        <img src="https://images.unsplash.com/photo-1617975357283-42a20f269a48?q=80&w=1887&auto=format&fit=crop" alt="Natural Ingredients" class="w-full h-full object-cover">
-                    </div>
-                    <div class="fade-in" style="transition-delay: 200ms;">
-                        <img src="https://images.unsplash.com/photo-1557173489-0c6543a0e0e0?q=80&w=1887&auto=format&fit=crop" alt="Perfume Bottle Detail" class="w-full h-full object-cover">
-                    </div>
-                    <div class="fade-in" style="transition-delay: 400ms;">
-                        <img src="https://images.unsplash.com/photo-1598436021379-88854553f1f7?q=80&w=1887&auto=format&fit=crop" alt="Lifestyle" class="w-full h-full object-cover">
-                    </div>
-                </div>
+                <p class="max-w-3xl mx-auto text-gray-600 mb-16 fade-in">Every bottle holds a story. A journey of rare ingredients and meticulous craftsmanship.</p>
             </div>
         </section>
     </main>
-
-    <footer class="bg-[#2a2a2a] text-white/70 py-10">
-        <div class="container mx-auto px-6 text-center text-sm">
-            <p>&copy; 2025 Eldavily Cosmetics. All Rights Reserved.</p>
-        </div>
-    </footer>
-
-    <script>
-        // Simple Intersection Observer for fade-in effect
-        const faders = document.querySelectorAll('.fade-in');
-        const appearOptions = { threshold: 0.3 };
-        const appearOnScroll = new IntersectionObserver(function(entries, appearOnScroll) {
-            entries.forEach(entry => {
-                if (!entry.isIntersecting) return;
-                entry.target.classList.add('appear');
-                appearOnScroll.unobserve(entry.target);
-            });
-        }, appearOptions);
-        faders.forEach(fader => appearOnScroll.observe(fader));
-    </script>
+    
+    <script src="js/datastore.js"></script>
+    <script src="js/main.js"></script>
 </body>
 </html>
