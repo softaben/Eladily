@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Successful - Eldavily Cosmetics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header id="main-header" class="sticky top-0 bg-[#f8f5f2]/80 backdrop-blur-sm z-50"></header>
+    
+    <main class="container mx-auto px-6 py-24 text-center">
+        <div class="max-w-2xl mx-auto">
+            <h1 class="text-4xl md:text-5xl font-semibold mb-4">Thank You For Your Order!</h1>
+            <p class="text-gray-600 mb-6">Your order has been placed successfully. You will receive a confirmation email shortly.</p>
+            <div id="order-summary" class="bg-white p-6 text-left shadow-md">
+                </div>
+            <a href="shop.html" class="inline-block mt-8 bg-slate-800 text-white py-3 px-8 hover:bg-slate-700 transition">Continue Shopping</a>
+        </div>
+    </main>
+
+    <script src="js/datastore.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const orderId = new URLSearchParams(window.location.search).get('orderId');
+            const summaryDiv = document.getElementById('order-summary');
+            if (!orderId) {
+                summaryDiv.innerHTML = '<p>Could not find your order details.</p>';
+                return;
+            }
+            summaryDiv.innerHTML = `
+                <h2 class="text-2xl mb-4">Order Confirmation</h2>
+                <p>Your Order ID is: <strong class="text-lg text-rose-600">${orderId}</strong></p>
+                <p class="mt-2">Use this ID to track the status of your shipment on our tracking page.</p>
+                <a href="track.html" class="text-slate-600 hover:underline mt-4 inline-block">Track Your Order →</a>
+            `;
+        });
+    </script>
+</body>
+</html>
