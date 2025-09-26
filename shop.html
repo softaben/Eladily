@@ -5,30 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shop - Eldavily Cosmetics</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Montserrat:wght@400;500&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Montserrat', sans-serif; background-color: #f8f5f2; color: #2a2a2a; }
-        h1, h2, h3, h4, h5, h6 { font-family: 'Cormorant Garamond', serif; }
-        .fade-in { opacity: 0; transition: opacity 0.6s ease-out; }
-        .fade-in.appear { opacity: 1; }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-
-    <header class="sticky top-0 bg-[#f8f5f2]/80 backdrop-blur-sm z-50">
-        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <div class="text-3xl font-bold tracking-widest">
-                <a href="index.html">ELDAVILY</a>
-            </div>
-            <div class="hidden md:flex space-x-10 items-center text-sm tracking-wider">
-                <a href="shop.html" class="text-[#6b705c] font-bold">SHOP</a>
-                <a href="#" class="hover:text-[#6b705c] transition-colors">OUR STORY</a>
-                <a href="admin.html" class="hover:text-[#6b705c] transition-colors">ADMIN</a>
-            </div>
-        </nav>
-    </header>
+    <header id="main-header" class="sticky top-0 bg-[#f8f5f2]/80 backdrop-blur-sm z-50"></header>
 
     <main class="container mx-auto px-6 py-16">
         <h1 class="text-5xl text-center mb-16">Our Collection</h1>
@@ -36,13 +16,8 @@
             </div>
     </main>
 
-    <footer class="bg-[#2a2a2a] text-white/70 py-10 mt-16">
-        <div class="container mx-auto px-6 text-center text-sm">
-            <p>&copy; 2025 Eldavily Cosmetics. All Rights Reserved.</p>
-        </div>
-    </footer>
-
     <script src="js/datastore.js"></script>
+    <script src="js/main.js"></script>
     <script src="js/shop.js"></script>
 </body>
 </html>
