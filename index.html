@@ -609,148 +609,209 @@
     </div>
 
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
+<script type="module">
+    // -------------------------------------------------------------------
+    // FIREBASE INITIALIZATION
+    // -------------------------------------------------------------------
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+    import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
 
-    // --- Cart State & Selectors ---
-    let cart = [];
-    const addToCartButtons = document.querySelectorAll('.btn-add');
-    const cartIcon = document.getElementById('cart-icon');
-    const modalOverlay = document.querySelector('.modal-overlay');
-    const cartModal = document.querySelector('.cart-modal');
-    const closeModals = document.querySelectorAll('.close-modal');
-    const cartBody = document.querySelector('.cart-body');
-    const subtotalPriceEl = document.getElementById('cart-subtotal-price');
-    const cartCountEl = document.querySelector('.cart-count');
-    const checkoutBtn = document.querySelector('.btn-checkout');
-    const checkoutModal = document.getElementById('checkout-modal');
-    const checkoutForm = document.getElementById('checkout-form');
-    const checkoutFormContainer = document.getElementById('checkout-form-container');
-    const orderConfirmationContainer = document.getElementById('order-confirmation-container');
+    const firebaseConfig = {
+        apiKey: "AIzaSyDuaP43jD8LWw5A8cIbcgS7-bqCZTXzEEg",
+        authDomain: "davily-feded.firebaseapp.com",
+        databaseURL: "https://davily-feded-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "davily-feded",
+        storageBucket: "davily-feded.firebasestorage.app",
+        messagingSenderId: "83255410493",
+        appId: "1:83255410493:web:927c5e859c5b20805c4f54",
+        measurementId: "G-LD4XHS6FGM"
+    };
 
-    // --- Functions ---
-    const updateCart = () => {
-        cartBody.innerHTML = '';
-        if (cart.length === 0) {
-            cartBody.innerHTML = '<div class="cart-empty-message">Your bag is empty.</div>';
-            checkoutBtn.disabled = true;
-            checkoutBtn.style.opacity = '0.5';
-        } else {
-            cart.forEach((item, index) => {
-                const cartItemHTML = `
-                    <div class="cart-item">
-                        <img src="${item.image}" alt="${item.name}">
-                        <div class="cart-item-details">
-                            <h4>${item.name}</h4>
-                            <p>$${parseFloat(item.price).toFixed(2)}</p>
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+
+    // -------------------------------------------------------------------
+    // WEBSITE FUNCTIONALITY
+    // -------------------------------------------------------------------
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // --- Cart State & Selectors ---
+        let cart = [];
+        const addToCartButtons = document.querySelectorAll('.btn-add');
+        const cartIcon = document.getElementById('cart-icon');
+        const modalOverlay = document.querySelector('.modal-overlay');
+        const cartModal = document.querySelector('.cart-modal');
+        const closeModals = document.querySelectorAll('.close-modal');
+        const cartBody = document.querySelector('.cart-body');
+        const subtotalPriceEl = document.getElementById('cart-subtotal-price');
+        const cartCountEl = document.querySelector('.cart-count');
+        const checkoutBtn = document.querySelector('.btn-checkout');
+        const checkoutModal = document.getElementById('checkout-modal');
+        const checkoutForm = document.getElementById('checkout-form');
+        const checkoutFormContainer = document.getElementById('checkout-form-container');
+        const orderConfirmationContainer = document.getElementById('order-confirmation-container');
+
+        // --- Functions ---
+        const updateCart = () => {
+            cartBody.innerHTML = '';
+            if (cart.length === 0) {
+                cartBody.innerHTML = '<div class="cart-empty-message">Your bag is empty.</div>';
+                checkoutBtn.disabled = true;
+                checkoutBtn.style.opacity = '0.5';
+            } else {
+                cart.forEach((item, index) => {
+                    const cartItemHTML = `
+                        <div class="cart-item">
+                            <img src="${item.image}" alt="${item.name}">
+                            <div class="cart-item-details">
+                                <h4>${item.name}</h4>
+                                <p>$${parseFloat(item.price).toFixed(2)}</p>
+                            </div>
+                            <button class="cart-item-remove" data-index="${index}">&times; Remove</button>
                         </div>
-                        <button class="cart-item-remove" data-index="${index}">&times; Remove</button>
-                    </div>
-                `;
-                cartBody.innerHTML += cartItemHTML;
+                    `;
+                    cartBody.innerHTML += cartItemHTML;
+                });
+                checkoutBtn.disabled = false;
+                checkoutBtn.style.opacity = '1';
+            }
+
+            const subtotal = cart.reduce((total, item) => total + parseFloat(item.price), 0);
+            subtotalPriceEl.textContent = `$${subtotal.toFixed(2)}`;
+            cartCountEl.textContent = cart.length;
+
+            document.querySelectorAll('.cart-item-remove').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const index = e.target.dataset.index;
+                    cart.splice(index, 1);
+                    updateCart();
+                });
             });
-            checkoutBtn.disabled = false;
-            checkoutBtn.style.opacity = '1';
-        }
+        };
 
-        const subtotal = cart.reduce((total, item) => total + parseFloat(item.price), 0);
-        subtotalPriceEl.textContent = `$${subtotal.toFixed(2)}`;
-        cartCountEl.textContent = cart.length;
+        const toggleCartModal = () => {
+            modalOverlay.classList.toggle('active');
+            cartModal.classList.toggle('active');
+            checkoutModal.style.opacity = '0';
+            checkoutModal.style.visibility = 'hidden';
+        };
+        
+        const showCheckoutModal = () => {
+            if(cart.length === 0) return;
+            cartModal.classList.remove('active');
+            checkoutModal.style.opacity = '1';
+            checkoutModal.style.visibility = 'visible';
+        };
 
-        // Add event listeners to new remove buttons
-        document.querySelectorAll('.cart-item-remove').forEach(button => {
+        const closeAllModals = () => {
+            modalOverlay.classList.remove('active');
+            cartModal.classList.remove('active');
+            checkoutModal.style.opacity = '0';
+            checkoutModal.style.visibility = 'hidden';
+            setTimeout(() => {
+                checkoutFormContainer.style.display = 'block';
+                orderConfirmationContainer.style.display = 'none';
+                checkoutForm.reset();
+            }, 400); 
+        };
+
+        // --- Event Listeners ---
+        addToCartButtons.forEach(button => {
             button.addEventListener('click', (e) => {
-                const index = e.target.dataset.index;
-                cart.splice(index, 1);
+                const name = e.target.dataset.name;
+                const price = e.target.dataset.price;
+                const image = e.target.dataset.image;
+                cart.push({ name, price, image });
                 updateCart();
+                
+                e.target.textContent = 'Added!';
+                setTimeout(() => { e.target.textContent = 'Add to Cart'; }, 1500);
             });
         });
-    };
 
-    const toggleCartModal = () => {
-        modalOverlay.classList.toggle('active');
-        cartModal.classList.toggle('active');
-        // ensure other modals are closed
-        checkoutModal.style.opacity = '0';
-        checkoutModal.style.visibility = 'hidden';
-    };
-    
-    const showCheckoutModal = () => {
-        if(cart.length === 0) return;
-        cartModal.classList.remove('active');
-        checkoutModal.style.opacity = '1';
-        checkoutModal.style.visibility = 'visible';
-    };
-
-    const closeAllModals = () => {
-        modalOverlay.classList.remove('active');
-        cartModal.classList.remove('active');
-        checkoutModal.style.opacity = '0';
-        checkoutModal.style.visibility = 'hidden';
-        // Reset checkout form view
-        setTimeout(() => {
-            checkoutFormContainer.style.display = 'block';
-            orderConfirmationContainer.style.display = 'none';
-        }, 400); // after transition ends
-    };
-
-    // --- Event Listeners ---
-    addToCartButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            const name = e.target.dataset.name;
-            const price = e.target.dataset.price;
-            const image = e.target.dataset.image;
-            cart.push({ name, price, image });
-            updateCart();
-            
-            // Visual feedback
-            e.target.textContent = 'Added!';
-            setTimeout(() => { e.target.textContent = 'Add to Cart'; }, 1500);
+        cartIcon.addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleCartModal();
         });
-    });
 
-    cartIcon.addEventListener('click', (e) => {
-        e.preventDefault();
-        toggleCartModal();
-    });
-
-    closeModals.forEach(btn => btn.addEventListener('click', closeAllModals));
-    modalOverlay.addEventListener('click', (e) => {
-        if (e.target === modalOverlay) {
-            closeAllModals();
-        }
-    });
-
-    checkoutBtn.addEventListener('click', showCheckoutModal);
-
-    checkoutForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        // Here you would normally process payment
-        checkoutFormContainer.style.display = 'none';
-        orderConfirmationContainer.style.display = 'block';
-        cart = []; // Empty the cart
-        updateCart(); // Update UI
-    });
-
-    // --- Scroll Animations ---
-    const revealElements = document.querySelectorAll('.reveal');
-    const revealOnScroll = () => {
-        const windowHeight = window.innerHeight;
-        revealElements.forEach(el => {
-            const elementTop = el.getBoundingClientRect().top;
-            if (elementTop < windowHeight - 100) {
-                el.classList.add('visible');
+        closeModals.forEach(btn => btn.addEventListener('click', closeAllModals));
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                closeAllModals();
             }
         });
-    };
-    window.addEventListener('scroll', revealOnScroll);
-    revealOnScroll(); // initial check
 
-    // --- Initial State ---
-    updateCart();
-});
+        checkoutBtn.addEventListener('click', showCheckoutModal);
+
+        // --- MODIFIED: Submit Order to Firebase ---
+        checkoutForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const placeOrderBtn = e.target.querySelector('.btn-place-order');
+            placeOrderBtn.disabled = true;
+            placeOrderBtn.textContent = 'Placing Order...';
+
+            // 1. Collect form data
+            const customerName = document.getElementById('name').value;
+            const customerAddress = document.getElementById('address').value;
+            const customerEmail = document.getElementById('email').value;
+
+            // 2. Prepare the order object
+            const subtotal = cart.reduce((total, item) => total + parseFloat(item.price), 0);
+            const orderData = {
+                customer: {
+                    name: customerName,
+                    address: customerAddress,
+                    email: customerEmail
+                },
+                items: cart,
+                subtotal: subtotal.toFixed(2),
+                status: 'pending',
+                createdAt: new Date().toISOString()
+            };
+
+            // 3. Create a new reference in the 'orders' collection and push data
+            const newOrderRef = push(ref(database, 'orders'));
+
+            set(newOrderRef, orderData)
+                .then(() => {
+                    // Success: Show confirmation
+                    checkoutFormContainer.style.display = 'none';
+                    orderConfirmationContainer.style.display = 'block';
+                    cart = []; // Empty the cart
+                    updateCart(); // Update UI
+                })
+                .catch((error) => {
+                    // Error: Alert the user
+                    console.error("Error sending order to Firebase: ", error);
+                    alert("Sorry, there was an error placing your order. Please try again.");
+                })
+                .finally(() => {
+                    // Re-enable the button
+                    placeOrderBtn.disabled = false;
+                    placeOrderBtn.textContent = 'Place Order';
+                });
+        });
+
+        // --- Scroll Animations ---
+        const revealElements = document.querySelectorAll('.reveal');
+        const revealOnScroll = () => {
+            const windowHeight = window.innerHeight;
+            revealElements.forEach(el => {
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 100) {
+                    el.classList.add('visible');
+                }
+            });
+        };
+        window.addEventListener('scroll', revealOnScroll);
+        revealOnScroll();
+
+        updateCart();
+    });
 </script>
+
 
 </body>
 </html>
-
