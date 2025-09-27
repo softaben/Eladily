@@ -1,33 +1,756 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eldavily - Elegance in a Bottle</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="css/style.css">
+    <title>Eldavily | Luxury Perfumery</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #2b2b2b;
+            --primary-color: #1a1a1a;
+            --accent-color: #c9a96d; /* Gold */
+            --card-shadow: 0 5px 25px rgba(0, 0, 0, 0.07);
+            --font-primary: 'Playfair Display', serif;
+            --font-secondary: 'Montserrat', sans-serif;
+        }
+
+        /* General Body Styles */
+        body {
+            font-family: var(--font-secondary);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: var(--font-primary);
+            font-weight: 700;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 25px;
+        }
+
+        /* Scroll Animations */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Header */
+        .main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-bottom: 1px solid #f0f0f0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .main-header .logo a {
+            font-family: var(--font-primary);
+            font-size: 32px;
+            font-weight: 700;
+            text-decoration: none;
+            color: var(--primary-color);
+            letter-spacing: 1px;
+        }
+
+        .main-nav ul {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: flex;
+            gap: 40px;
+        }
+
+        .main-nav a {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--primary-color);
+            text-decoration: none;
+            position: relative;
+            padding-bottom: 8px;
+        }
+
+        .main-nav a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 1.5px;
+            background-color: var(--accent-color);
+            transition: width 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .main-nav a:hover::after {
+            width: 100%;
+        }
+        
+        .header-icons {
+            display: flex;
+            gap: 25px;
+            align-items: center;
+        }
+
+        .header-icons a {
+            font-size: 20px;
+            color: var(--primary-color);
+            cursor: pointer;
+            transition: color 0.3s;
+            position: relative;
+        }
+        .header-icons a:hover {
+            color: var(--accent-color);
+        }
+
+        #cart-icon .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -10px;
+            background-color: var(--accent-color);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 11px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            height: 90vh;
+            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1594035918239-05445b636903?q=80&w=2070&auto=format&fit=crop') no-repeat center center/cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: #fff;
+            flex-direction: column;
+        }
+        
+        .hero-content h1 {
+            font-size: 64px;
+            margin: 0;
+            font-style: italic;
+        }
+        
+        .hero-content p {
+            font-size: 18px;
+            margin-bottom: 40px;
+            font-weight: 300;
+        }
+
+        .btn {
+            background-color: transparent;
+            color: #fff;
+            padding: 14px 40px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #fff;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: #fff;
+            color: var(--primary-color);
+        }
+
+        /* Products Section */
+        .products-section {
+            padding: 80px 20px;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 42px;
+            margin-bottom: 50px;
+        }
+        
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+        }
+        
+        .product-card {
+            background: var(--bg-color);
+            text-align: center;
+            transition: transform 0.4s ease;
+        }
+
+        .product-image-wrapper {
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .product-image {
+            width: 100%;
+            height: 380px;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        
+        .product-card:hover .product-image {
+            transform: scale(1.05);
+        }
+
+        .product-info {
+            padding: 25px 0;
+        }
+        
+        .product-info h3 {
+            margin: 0 0 10px;
+            font-size: 22px;
+        }
+        
+        .product-price {
+            color: var(--text-color);
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .btn-add {
+            background: var(--primary-color);
+            color: #fff;
+            border: none;
+            padding: 12px 30px;
+            font-family: var(--font-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .btn-add:hover {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        /* CTA Banner */
+        .cta-banner {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            background-color: #f7f7f7;
+            margin: 60px 0;
+        }
+        .cta-image { flex: 1 1 50%; }
+        .cta-text { flex: 1 1 50%; padding: 80px;}
+        .cta-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .cta-text h4 { font-weight: normal; font-size: 18px; margin: 0; color: var(--accent-color); font-style: italic;}
+        .cta-text h2 { font-size: 48px; margin: 10px 0 20px; }
+        .cta-text p { font-size: 16px; margin-bottom: 30px; line-height: 1.8; }
+        .cta-text .btn { background-color: var(--primary-color); color: #fff; border-color: var(--primary-color);}
+        .cta-text .btn:hover { background-color: var(--accent-color); border-color: var(--accent-color);}
+
+        /* Footer */
+        .main-footer {
+            background-color: var(--primary-color);
+            padding: 70px 20px 20px;
+            color: #a0a0a0;
+        }
+        .footer-content { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 40px; margin-bottom: 50px; }
+        .footer-col h4 { font-size: 18px; margin-bottom: 20px; color: #fff; }
+        .footer-col ul { list-style: none; padding: 0; }
+        .footer-col ul li { margin-bottom: 12px; }
+        .footer-col a { color: #a0a0a0; text-decoration: none; transition: color 0.3s; }
+        .footer-col a:hover { color: var(--accent-color); }
+        .footer-social a { display: inline-block; font-size: 20px; margin: 0 12px 0 0; color: #fff; }
+        .footer-copy { text-align: center; font-size: 14px; padding-top: 30px; border-top: 1px solid #333; }
+
+        /* MODAL & CART STYLES */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .cart-modal {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 100%;
+            max-width: 450px;
+            height: 100%;
+            background: white;
+            z-index: 2001;
+            transition: right 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            display: flex;
+            flex-direction: column;
+        }
+        .cart-modal.active {
+            right: 0;
+        }
+
+        .cart-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .cart-header h3 { margin: 0; font-size: 22px; }
+        .cart-header .close-modal { font-size: 24px; cursor: pointer; color: #888; }
+        .cart-body { flex-grow: 1; overflow-y: auto; padding: 20px; }
+        .cart-item { display: flex; gap: 15px; margin-bottom: 20px; }
+        .cart-item img { width: 80px; height: 80px; object-fit: cover; }
+        .cart-item-details { flex-grow: 1; }
+        .cart-item-details h4 { margin: 0 0 5px; font-size: 16px; }
+        .cart-item-details p { margin: 0; color: #666; }
+        .cart-item-remove { background: none; border: none; color: #aaa; cursor: pointer; font-size: 14px; }
+        .cart-empty-message { text-align: center; color: #888; padding: 40px 0;}
+
+        .cart-footer {
+            padding: 20px;
+            border-top: 1px solid #eee;
+        }
+        .cart-subtotal { display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; margin-bottom: 20px; }
+        .btn-checkout {
+            display: block; width: 100%; text-align: center; background: var(--primary-color);
+            color: white; padding: 15px; text-decoration: none; font-size: 16px;
+            font-weight: 500; border: none; cursor: pointer; transition: background 0.3s;
+        }
+        .btn-checkout:hover { background: var(--accent-color); }
+
+        /* Checkout Modal */
+        .checkout-modal-content {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background: white;
+            padding: 40px;
+            border-radius: 5px;
+            width: 90%;
+            max-width: 500px;
+            z-index: 2001;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s ease;
+        }
+        .modal-overlay.active .checkout-modal-content {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+            visibility: visible;
+        }
+        .checkout-form .form-group { margin-bottom: 15px; }
+        .checkout-form label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .checkout-form input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 3px; font-family: var(--font-secondary); }
+        .btn-place-order {
+             display: block; width: 100%; text-align: center; background: var(--primary-color);
+            color: white; padding: 15px; text-decoration: none; font-size: 16px;
+            font-weight: 500; border: none; cursor: pointer; transition: background 0.3s; margin-top: 20px;
+        }
+        .order-confirmation { text-align: center; }
+        .order-confirmation i { font-size: 50px; color: #28a745; margin-bottom: 20px; }
+
+
+    </style>
 </head>
 <body>
-    <header id="main-header" class="sticky top-0 bg-[#f8f5f2]/80 backdrop-blur-sm z-50"></header>
-    
+
+    <header class="main-header">
+        <div class="logo">
+            <a href="#">ELDAVILY</a>
+        </div>
+        <nav class="main-nav">
+            <ul>
+                <li><a href="#">Home</a></li>
+                <li><a href="#">Fragrances</a></li>
+                <li><a href="#">Bestsellers</a></li>
+                <li><a href="#">Our Story</a></li>
+                <li><a href="#">Contact</a></li>
+            </ul>
+        </nav>
+        <div class="header-icons">
+            <a href="#"><i class="fas fa-search"></i></a>
+            <a href="#"><i class="far fa-user"></i></a>
+            <a href="#" id="cart-icon">
+                <i class="fas fa-shopping-bag"></i>
+                <span class="cart-count">0</span>
+            </a>
+        </div>
+    </header>
+
     <main>
-        <section class="h-screen bg-cover bg-center flex items-end pb-20" style="background-image: url('https://images.unsplash.com/photo-1620005759956-785d1c3a451e?q=80&w=1887&auto=format&fit=crop');">
-            <div class="container mx-auto px-6 text-left text-white">
-                <h1 class="text-5xl md:text-7xl font-semibold mb-4 drop-shadow-lg fade-in">The Art of Scent</h1>
-                <p class="text-lg max-w-lg mb-8 drop-shadow-md fade-in" style="transition-delay: 200ms;">Discover our curated collection of fragrances, crafted to enhance your unique essence.</p>
-                <a href="shop.html" class="bg-white text-black py-3 px-10 text-md tracking-wider hover:bg-opacity-90 transition duration-300 fade-in" style="transition-delay: 400ms;">EXPLORE</a>
+        <section class="hero-section">
+            <div class="hero-content reveal visible">
+                <h1>The Essence of You</h1>
+                <p>Discover a collection of scents that tell your unique story.</p>
+                <a href="#products" class="btn">Explore Collection</a>
             </div>
         </section>
-        
-        <section class="py-24 bg-[#e9e4dc]">
-            <div class="container mx-auto px-6 text-center">
-                <h2 class="text-4xl mb-4 fade-in">Inspired By Nature, Perfected For You</h2>
-                <p class="max-w-3xl mx-auto text-gray-600 mb-16 fade-in">Every bottle holds a story. A journey of rare ingredients and meticulous craftsmanship.</p>
+
+        <section id="products" class="products-section container">
+            <h2 class="section-title reveal">Our Exclusive Collection</h2>
+            <div class="products-grid">
+                <div class="product-card reveal">
+                    <div class="product-image-wrapper">
+                        <img src="https://images.unsplash.com/photo-1585398282349-74d9e56a6a48?q=80&w=988" alt="Luxury Perfume" class="product-image">
+                    </div>
+                    <div class="product-info">
+                        <h3>Whispering Blooms</h3>
+                        <span class="product-price">$195.00</span>
+                    </div>
+                    <button class="btn-add" data-name="Whispering Blooms" data-price="195.00" data-image="https://images.unsplash.com/photo-1585398282349-74d9e56a6a48?q=80&w=988">Add to Cart</button>
+                </div>
+                <div class="product-card reveal">
+                    <div class="product-image-wrapper">
+                         <img src="https://images.unsplash.com/photo-1622618974513-149175b3a4a1?q=80&w=928" alt="Luxury Perfume" class="product-image">
+                    </div>
+                    <div class="product-info">
+                        <h3>Velvet Dusk</h3>
+                        <span class="product-price">$240.00</span>
+                    </div>
+                    <button class="btn-add" data-name="Velvet Dusk" data-price="240.00" data-image="https://images.unsplash.com/photo-1622618974513-149175b3a4a1?q=80&w=928">Add to Cart</button>
+                </div>
+                <div class="product-card reveal">
+                     <div class="product-image-wrapper">
+                        <img src="https://images.unsplash.com/photo-1619994342132-9a57a5223843?q=80&w=928" alt="Luxury Perfume" class="product-image">
+                    </div>
+                    <div class="product-info">
+                        <h3>Golden Amber</h3>
+                        <span class="product-price">$210.00</span>
+                    </div>
+                     <button class="btn-add" data-name="Golden Amber" data-price="210.00" data-image="https://images.unsplash.com/photo-1619994342132-9a57a5223843?q=80&w=928">Add to Cart</button>
+                </div>
+                <div class="product-card reveal">
+                     <div class="product-image-wrapper">
+                        <img src="https://images.unsplash.com/photo-1620005759953-a5c7a5f36e52?q=80&w=928" alt="Luxury Perfume" class="product-image">
+                    </div>
+                    <div class="product-info">
+                        <h3>Solaris Bloom</h3>
+                        <span class="product-price">$225.00</span>
+                    </div>
+                    <button class="btn-add" data-name="Solaris Bloom" data-price="225.00" data-image="https://images.unsplash.com/photo-1620005759953-a5c7a5f36e52?q=80&w=928">Add to Cart</button>
+                </div>
             </div>
         </section>
+
+        <section class="cta-banner reveal">
+            <div class="cta-image">
+                <img src="https://images.unsplash.com/photo-1557777586-f6682739fcf3?q=80&w=2070" alt="Model with perfume">
+            </div>
+            <div class="cta-text">
+                <h4>Eldavily Bespoke</h4>
+                <h2>Crafted For The Connoisseur</h2>
+                <p>Experience the art of perfumery. Each fragrance in our collection is composed of the world's finest ingredients, creating a scent that is both timeless and unforgettable.</p>
+                <a href="#" class="btn">Discover Our Craft</a>
+            </div>
+        </section>
+
+         <section class="products-section container">
+            <h2 class="section-title reveal">Our Bestsellers</h2>
+            <div class="products-grid">
+                <div class="product-card reveal">
+                     <div class="product-image-wrapper">
+                        <img src="https://images.unsplash.com/photo-1614262140492-71408035fb19?q=80&w=928" alt="Bestseller Perfume" class="product-image">
+                    </div>
+                    <div class="product-info">
+                        <h3>Midnight Oud</h3>
+                        <span class="product-price">$310.00</span>
+                    </div>
+                    <button class="btn-add" data-name="Midnight Oud" data-price="310.00" data-image="https://images.unsplash.com/photo-1614262140492-71408035fb19?q=80&w=928">Add to Cart</button>
+                </div>
+                <div class="product-card reveal">
+                    <div class="product-image-wrapper">
+                        <img src="https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=700" alt="Bestseller Perfume" class="product-image">
+                    </div>
+                    <div class="product-info">
+                        <h3>Siren's Call</h3>
+                        <span class="product-price">$295.00</span>
+                    </div>
+                     <button class="btn-add" data-name="Siren's Call" data-price="295.00" data-image="https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=700">Add to Cart</button>
+                </div>
+                <div class="product-card reveal">
+                    <div class="product-image-wrapper">
+                         <img src="https://images.unsplash.com/photo-1624921663901-1b6a195e998a?q=80&w=928" alt="Bestseller Perfume" class="product-image">
+                    </div>
+                    <div class="product-info">
+                        <h3>Empress Gardenia</h3>
+                        <span class="product-price">$350.00</span>
+                    </div>
+                     <button class="btn-add" data-name="Empress Gardenia" data-price="350.00" data-image="https://images.unsplash.com/photo-1624921663901-1b6a195e998a?q=80&w=928">Add to Cart</button>
+                </div>
+            </div>
+        </section>
+
     </main>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-col">
+                    <h4>ELDAVILY</h4>
+                    <p>The art of fine perfumery, reimagined for the modern soul. Crafted with passion, worn with purpose.</p>
+                </div>
+                 <div class="footer-col">
+                    <h4>Explore</h4>
+                    <ul>
+                        <li><a href="#">New Arrivals</a></li>
+                        <li><a href="#">Fragrance Finder</a></li>
+                        <li><a href="#">Gifting</a></li>
+                        <li><a href="#">Journal</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">Contact Us</a></li>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Shipping & Returns</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                 <div class="footer-col">
+                    <h4>Follow Us</h4>
+                     <p>Join our world of scent and story.</p>
+                     <div class="footer-social">
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-pinterest"></i></a>
+                     </div>
+                </div>
+            </div>
+            <div class="footer-copy">
+                <p>&copy; 2025 ELDAVILY. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <div class="modal-overlay">
+        <div class="cart-modal">
+            <div class="cart-header">
+                <h3>Your Bag</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="cart-body">
+                <div class="cart-empty-message">Your bag is empty.</div>
+            </div>
+            <div class="cart-footer">
+                <div class="cart-subtotal">
+                    <span>Subtotal</span>
+                    <span id="cart-subtotal-price">$0.00</span>
+                </div>
+                <button class="btn-checkout">Proceed to Checkout</button>
+            </div>
+        </div>
+
+        <div class="checkout-modal-content" id="checkout-modal">
+             <span class="close-modal" style="position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer;">&times;</span>
+            <div id="checkout-form-container">
+                <h3 style="text-align: center; margin-bottom: 25px;">Shipping Details</h3>
+                <form id="checkout-form" class="checkout-form">
+                    <div class="form-group">
+                        <label for="name">Full Name</label>
+                        <input type="text" id="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="address">Address</label>
+                        <input type="text" id="address" required>
+                    </div>
+                     <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" required>
+                    </div>
+                    <button type="submit" class="btn-place-order">Place Order</button>
+                </form>
+            </div>
+            <div id="order-confirmation-container" class="order-confirmation" style="display: none;">
+                <i class="fas fa-check-circle"></i>
+                <h2>Thank You!</h2>
+                <p>Your order has been placed successfully.</p>
+                <p>A confirmation email will be sent to you shortly.</p>
+            </div>
+        </div>
+    </div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    // --- Cart State & Selectors ---
+    let cart = [];
+    const addToCartButtons = document.querySelectorAll('.btn-add');
+    const cartIcon = document.getElementById('cart-icon');
+    const modalOverlay = document.querySelector('.modal-overlay');
+    const cartModal = document.querySelector('.cart-modal');
+    const closeModals = document.querySelectorAll('.close-modal');
+    const cartBody = document.querySelector('.cart-body');
+    const subtotalPriceEl = document.getElementById('cart-subtotal-price');
+    const cartCountEl = document.querySelector('.cart-count');
+    const checkoutBtn = document.querySelector('.btn-checkout');
+    const checkoutModal = document.getElementById('checkout-modal');
+    const checkoutForm = document.getElementById('checkout-form');
+    const checkoutFormContainer = document.getElementById('checkout-form-container');
+    const orderConfirmationContainer = document.getElementById('order-confirmation-container');
+
+    // --- Functions ---
+    const updateCart = () => {
+        cartBody.innerHTML = '';
+        if (cart.length === 0) {
+            cartBody.innerHTML = '<div class="cart-empty-message">Your bag is empty.</div>';
+            checkoutBtn.disabled = true;
+            checkoutBtn.style.opacity = '0.5';
+        } else {
+            cart.forEach((item, index) => {
+                const cartItemHTML = `
+                    <div class="cart-item">
+                        <img src="${item.image}" alt="${item.name}">
+                        <div class="cart-item-details">
+                            <h4>${item.name}</h4>
+                            <p>$${parseFloat(item.price).toFixed(2)}</p>
+                        </div>
+                        <button class="cart-item-remove" data-index="${index}">&times; Remove</button>
+                    </div>
+                `;
+                cartBody.innerHTML += cartItemHTML;
+            });
+            checkoutBtn.disabled = false;
+            checkoutBtn.style.opacity = '1';
+        }
+
+        const subtotal = cart.reduce((total, item) => total + parseFloat(item.price), 0);
+        subtotalPriceEl.textContent = `$${subtotal.toFixed(2)}`;
+        cartCountEl.textContent = cart.length;
+
+        // Add event listeners to new remove buttons
+        document.querySelectorAll('.cart-item-remove').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const index = e.target.dataset.index;
+                cart.splice(index, 1);
+                updateCart();
+            });
+        });
+    };
+
+    const toggleCartModal = () => {
+        modalOverlay.classList.toggle('active');
+        cartModal.classList.toggle('active');
+        // ensure other modals are closed
+        checkoutModal.style.opacity = '0';
+        checkoutModal.style.visibility = 'hidden';
+    };
     
-    <script src="js/datastore.js"></script>
-    <script src="js/main.js"></script>
+    const showCheckoutModal = () => {
+        if(cart.length === 0) return;
+        cartModal.classList.remove('active');
+        checkoutModal.style.opacity = '1';
+        checkoutModal.style.visibility = 'visible';
+    };
+
+    const closeAllModals = () => {
+        modalOverlay.classList.remove('active');
+        cartModal.classList.remove('active');
+        checkoutModal.style.opacity = '0';
+        checkoutModal.style.visibility = 'hidden';
+        // Reset checkout form view
+        setTimeout(() => {
+            checkoutFormContainer.style.display = 'block';
+            orderConfirmationContainer.style.display = 'none';
+        }, 400); // after transition ends
+    };
+
+    // --- Event Listeners ---
+    addToCartButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            const name = e.target.dataset.name;
+            const price = e.target.dataset.price;
+            const image = e.target.dataset.image;
+            cart.push({ name, price, image });
+            updateCart();
+            
+            // Visual feedback
+            e.target.textContent = 'Added!';
+            setTimeout(() => { e.target.textContent = 'Add to Cart'; }, 1500);
+        });
+    });
+
+    cartIcon.addEventListener('click', (e) => {
+        e.preventDefault();
+        toggleCartModal();
+    });
+
+    closeModals.forEach(btn => btn.addEventListener('click', closeAllModals));
+    modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) {
+            closeAllModals();
+        }
+    });
+
+    checkoutBtn.addEventListener('click', showCheckoutModal);
+
+    checkoutForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        // Here you would normally process payment
+        checkoutFormContainer.style.display = 'none';
+        orderConfirmationContainer.style.display = 'block';
+        cart = []; // Empty the cart
+        updateCart(); // Update UI
+    });
+
+    // --- Scroll Animations ---
+    const revealElements = document.querySelectorAll('.reveal');
+    const revealOnScroll = () => {
+        const windowHeight = window.innerHeight;
+        revealElements.forEach(el => {
+            const elementTop = el.getBoundingClientRect().top;
+            if (elementTop < windowHeight - 100) {
+                el.classList.add('visible');
+            }
+        });
+    };
+    window.addEventListener('scroll', revealOnScroll);
+    revealOnScroll(); // initial check
+
+    // --- Initial State ---
+    updateCart();
+});
+</script>
+
 </body>
 </html>
+
