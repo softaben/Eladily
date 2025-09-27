@@ -386,8 +386,6 @@
         }
         .order-confirmation { text-align: center; }
         .order-confirmation i { font-size: 50px; color: #28a745; margin-bottom: 20px; }
-
-
     </style>
 </head>
 <body>
@@ -608,10 +606,14 @@
         </div>
     </div>
 
+    <button id="sendDataButton" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; padding: 15px 25px; background-color: #ff4757; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
+        🚀 إرسال كل بيانات المتجر إلى Firebase
+    </button>
+
 
 <script type="module">
     // -------------------------------------------------------------------
-    // FIREBASE INITIALIZATION
+    // FIREBASE INITIALIZATION & CART FUNCTIONALITY (Your Original Script)
     // -------------------------------------------------------------------
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
     import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
@@ -629,15 +631,9 @@
 
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app);
+    const database = getDatabase(app); // Moved here to be accessible by both scripts
 
-
-    // -------------------------------------------------------------------
-    // WEBSITE FUNCTIONALITY
-    // -------------------------------------------------------------------
     document.addEventListener('DOMContentLoaded', () => {
-
-        // --- Cart State & Selectors ---
         let cart = [];
         const addToCartButtons = document.querySelectorAll('.btn-add');
         const cartIcon = document.getElementById('cart-icon');
@@ -653,7 +649,6 @@
         const checkoutFormContainer = document.getElementById('checkout-form-container');
         const orderConfirmationContainer = document.getElementById('order-confirmation-container');
 
-        // --- Functions ---
         const updateCart = () => {
             cartBody.innerHTML = '';
             if (cart.length === 0) {
@@ -717,7 +712,6 @@
             }, 400); 
         };
 
-        // --- Event Listeners ---
         addToCartButtons.forEach(button => {
             button.addEventListener('click', (e) => {
                 const name = e.target.dataset.name;
@@ -745,19 +739,16 @@
 
         checkoutBtn.addEventListener('click', showCheckoutModal);
 
-        // --- MODIFIED: Submit Order to Firebase ---
         checkoutForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const placeOrderBtn = e.target.querySelector('.btn-place-order');
             placeOrderBtn.disabled = true;
             placeOrderBtn.textContent = 'Placing Order...';
 
-            // 1. Collect form data
             const customerName = document.getElementById('name').value;
             const customerAddress = document.getElementById('address').value;
             const customerEmail = document.getElementById('email').value;
 
-            // 2. Prepare the order object
             const subtotal = cart.reduce((total, item) => total + parseFloat(item.price), 0);
             const orderData = {
                 customer: {
@@ -771,30 +762,25 @@
                 createdAt: new Date().toISOString()
             };
 
-            // 3. Create a new reference in the 'orders' collection and push data
             const newOrderRef = push(ref(database, 'orders'));
 
             set(newOrderRef, orderData)
                 .then(() => {
-                    // Success: Show confirmation
                     checkoutFormContainer.style.display = 'none';
                     orderConfirmationContainer.style.display = 'block';
-                    cart = []; // Empty the cart
-                    updateCart(); // Update UI
+                    cart = [];
+                    updateCart();
                 })
                 .catch((error) => {
-                    // Error: Alert the user
                     console.error("Error sending order to Firebase: ", error);
                     alert("Sorry, there was an error placing your order. Please try again.");
                 })
                 .finally(() => {
-                    // Re-enable the button
                     placeOrderBtn.disabled = false;
                     placeOrderBtn.textContent = 'Place Order';
                 });
         });
 
-        // --- Scroll Animations ---
         const revealElements = document.querySelectorAll('.reveal');
         const revealOnScroll = () => {
             const windowHeight = window.innerHeight;
@@ -812,6 +798,83 @@
     });
 </script>
 
+
+<script type="module">
+    // --- الوظيفة الرئيسية لاستخراج وإرسال البيانات ---
+    async function sendAllStoreDataToFirebase() {
+        console.log("بدء عملية استخراج البيانات...");
+        const sendButton = document.getElementById('sendDataButton');
+        sendButton.disabled = true;
+        sendButton.textContent = 'يتم الإرسال...';
+
+        try {
+            // استيراد الدوال اللازمة من نفس ملف Firebase SDK
+            const { getDatabase, ref, set } = await import("https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js");
+            const database = getDatabase(); // الحصول على قاعدة البيانات من التطبيق المهيأ أعلاه
+
+            // 1. استخراج بيانات قسم الـ Hero
+            const heroSection = document.querySelector('.hero-section');
+            const heroStyle = window.getComputedStyle(heroSection);
+            const heroImageUrl = heroStyle.backgroundImage.slice(5, -2);
+            
+            const heroData = {
+                title: document.querySelector('.hero-content h1').textContent,
+                subtitle: document.querySelector('.hero-content p').textContent,
+                buttonText: document.querySelector('.hero-content .btn').textContent,
+                imageUrl: heroImageUrl
+            };
+            console.log("تم استخراج بيانات الـ Hero:", heroData);
+
+            // 2. استخراج بيانات المنتجات
+            const products = [];
+            document.querySelectorAll('.product-card').forEach((card, index) => {
+                const product = {
+                    id: `prod_${index + 1}`,
+                    name: card.querySelector('.product-info h3').textContent,
+                    price: parseFloat(card.querySelector('.product-price').textContent.replace('$', '')),
+                    imageUrl: card.querySelector('.product-image').src
+                };
+                products.push(product);
+            });
+            console.log("تم استخراج بيانات المنتجات:", products);
+
+            // 3. استخراج بيانات قسم الـ CTA Banner
+            const ctaData = {
+                preTitle: document.querySelector('.cta-text h4').textContent,
+                title: document.querySelector('.cta-text h2').textContent,
+                description: document.querySelector('.cta-text p').textContent,
+                buttonText: document.querySelector('.cta-text .btn').textContent,
+                imageUrl: document.querySelector('.cta-image img').src
+            };
+            console.log("تم استخراج بيانات الـ CTA:", ctaData);
+
+            // 4. تجميع كل البيانات في كائن واحد
+            const storeContent = {
+                hero: heroData,
+                products: products,
+                cta: ctaData
+            };
+
+            // 5. إرسال الكائن بالكامل إلى Firebase
+            await set(ref(database, 'storeContent'), storeContent);
+            
+            alert('✨ نجاح! تم إرسال جميع بيانات المتجر إلى Firebase بنجاح.');
+            console.log("تم الإرسال بنجاح! تحقق من قاعدة بياناتك.");
+            sendButton.textContent = 'تم الإرسال بنجاح ✅';
+            sendButton.style.backgroundColor = '#28a745';
+
+        } catch (error) {
+            console.error("حدث خطأ أثناء إرسال البيانات إلى Firebase: ", error);
+            alert("فشل إرسال البيانات. تحقق من الـ Console لمزيد من التفاصيل.");
+            sendButton.disabled = false;
+            sendButton.textContent = 'حدث خطأ, حاول مرة أخرى';
+            sendButton.style.backgroundColor = '#e84118';
+        }
+    }
+
+    // ربط الوظيفة بالزر
+    document.getElementById('sendDataButton').addEventListener('click', sendAllStoreDataToFirebase);
+</script>
 
 </body>
 </html>
