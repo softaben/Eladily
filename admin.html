@@ -6,6 +6,11 @@
     <title>Eldavily Admin Panel</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
+    <!-- مكتبات لتحميل البيانات -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
@@ -130,6 +135,30 @@
         .date-filter button { padding: 8px 15px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer; }
         .date-filter button.active { background-color: var(--accent-color); color: white; border-color: var(--accent-color); }
 
+        /* Data Export Styles */
+        .export-options { display: flex; gap: 10px; margin-bottom: 20px; }
+        .export-btn { display: flex; align-items: center; gap: 8px; padding: 10px 15px; background-color: var(--success-color); color: white; border: none; border-radius: 4px; cursor: pointer; transition: all 0.3s; }
+        .export-btn:hover { background-color: #218838; }
+        .export-btn.pdf { background-color: #dc3545; }
+        .export-btn.pdf:hover { background-color: #c82333; }
+        .export-btn.excel { background-color: #28a745; }
+        .export-btn.excel:hover { background-color: #218838; }
+        
+        /* Table Styles */
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .data-table th, .data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
+        .data-table th { background-color: #f8f9fa; font-weight: 600; color: var(--primary-color); }
+        .data-table tr:hover { background-color: #f8f9fa; }
+        .table-container { overflow-x: auto; }
+        
+        /* Stock Management Styles */
+        .stock-info { display: flex; align-items: center; gap: 5px; }
+        .stock-low { color: var(--danger-color); font-weight: bold; }
+        .stock-medium { color: var(--warning-color); }
+        .stock-high { color: var(--success-color); }
+        .stock-actions { display: flex; gap: 5px; }
+        .stock-input { width: 80px; padding: 5px; border: 1px solid #ddd; border-radius: 4px; }
+
         @media (max-width: 768px) {
             .sidebar { width: 100%; height: auto; position: relative; }
             .main-content { margin-left: 0; }
@@ -137,6 +166,7 @@
             .order-details { grid-template-columns: 1fr; }
             .modal-content { width: 95%; padding: 20px; }
             .stats-grid { grid-template-columns: 1fr; }
+            .export-options { flex-direction: column; }
         }
     </style>
 </head>
@@ -161,6 +191,7 @@
                 <div class="menu-item" data-tab="statistics"><i class="fas fa-chart-line"></i><span>Statistics</span></div>
                 <div class="menu-item" data-tab="orders"><i class="fas fa-receipt"></i><span>Orders</span></div>
                 <div class="menu-item" data-tab="products"><i class="fas fa-box-open"></i><span>Products</span></div>
+                <div class="menu-item" data-tab="stock"><i class="fas fa-warehouse"></i><span>Stock Management</span></div>
                 <div class="menu-item" data-tab="content"><i class="fas fa-edit"></i><span>Store Content</span></div>
                 <div class="menu-item" data-tab="notifications"><i class="fas fa-bell"></i><span>Notifications</span></div>
             </div>
@@ -221,6 +252,11 @@
                     <button data-range="30">Last 30 Days</button>
                     <button data-range="90">Last 90 Days</button>
                     <button data-range="365">Last Year</button>
+                </div>
+                
+                <div class="export-options">
+                    <button class="export-btn pdf" id="exportStatsPdf"><i class="fas fa-file-pdf"></i> Export Statistics as PDF</button>
+                    <button class="export-btn excel" id="exportStatsExcel"><i class="fas fa-file-excel"></i> Export Statistics as Excel</button>
                 </div>
                 
                 <div class="stats-grid">
@@ -285,8 +321,28 @@
                 <div class="content-section">
                     <div class="section-header">
                         <div class="section-title">Recent Orders</div>
+                        <div class="export-options">
+                            <button class="export-btn pdf" id="exportOrdersPdf"><i class="fas fa-file-pdf"></i> Export as PDF</button>
+                            <button class="export-btn excel" id="exportOrdersExcel"><i class="fas fa-file-excel"></i> Export as Excel</button>
+                        </div>
                     </div>
-                    <div id="ordersList" class="loading">Loading orders...</div>
+                    <div class="table-container">
+                        <table class="data-table" id="ordersTable">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersList">
+                                <!-- Orders will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
             
@@ -294,9 +350,58 @@
                 <div class="content-section">
                     <div class="section-header">
                         <div class="section-title">Product Management</div>
-                        <div class="section-actions"><button id="addNewProductBtn">Add New Product</button></div>
+                        <div class="section-actions">
+                            <button id="addNewProductBtn">Add New Product</button>
+                            <div class="export-options">
+                                <button class="export-btn pdf" id="exportProductsPdf"><i class="fas fa-file-pdf"></i> Export as PDF</button>
+                                <button class="export-btn excel" id="exportProductsExcel"><i class="fas fa-file-excel"></i> Export as Excel</button>
+                            </div>
+                        </div>
                     </div>
-                    <div id="productsList" class="loading">Loading products...</div>
+                    <div class="table-container">
+                        <table class="data-table" id="productsTable">
+                            <thead>
+                                <tr>
+                                    <th>Product Name</th>
+                                    <th>Price</th>
+                                    <th>Stock</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productsList">
+                                <!-- Products will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="stock" class="tab-content">
+                <div class="content-section">
+                    <div class="section-header">
+                        <div class="section-title">Stock Management</div>
+                        <div class="export-options">
+                            <button class="export-btn pdf" id="exportStockPdf"><i class="fas fa-file-pdf"></i> Export as PDF</button>
+                            <button class="export-btn excel" id="exportStockExcel"><i class="fas fa-file-excel"></i> Export as Excel</button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table" id="stockTable">
+                            <thead>
+                                <tr>
+                                    <th>Product Name</th>
+                                    <th>Current Stock</th>
+                                    <th>Low Stock Alert</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stockList">
+                                <!-- Stock items will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
             
@@ -338,8 +443,28 @@
                 <div class="content-section">
                     <div class="section-header">
                         <div class="section-title">Notification History</div>
+                        <div class="export-options">
+                            <button class="export-btn pdf" id="exportNotificationsPdf"><i class="fas fa-file-pdf"></i> Export as PDF</button>
+                            <button class="export-btn excel" id="exportNotificationsExcel"><i class="fas fa-file-excel"></i> Export as Excel</button>
+                        </div>
                     </div>
-                    <div id="notificationHistory" class="loading">Loading notification history...</div>
+                    <div class="table-container">
+                        <table class="data-table" id="notificationsTable">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Message</th>
+                                    <th>Position</th>
+                                    <th>Sent Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="notificationHistory">
+                                <!-- Notifications will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -353,7 +478,9 @@
             <form id="productForm">
                 <input type="hidden" id="productId">
                 <div class="form-group"><label for="productName">Name</label><input type="text" id="productName" class="form-control" required></div>
-                <div class="form-group"><label for="productPrice">Price</label><input type="number" id="productPrice" class="form-control" required></div>
+                <div class="form-group"><label for="productPrice">Price</label><input type="number" id="productPrice" class="form-control" step="0.01" required></div>
+                <div class="form-group"><label for="productStock">Stock Quantity</label><input type="number" id="productStock" class="form-control" required></div>
+                <div class="form-group"><label for="productLowStockAlert">Low Stock Alert</label><input type="number" id="productLowStockAlert" class="form-control" value="5"></div>
                 <div class="form-group"><label for="productImageUrl">Image URL</label><input type="text" id="productImageUrl" class="form-control"></div>
                 <div class="form-group"><label for="productDescription">Description</label><textarea id="productDescription" class="form-control"></textarea></div>
                 <button type="submit" class="btn btn-primary">Save Product</button>
@@ -369,6 +496,45 @@
             <div id="orderDetailsContent">
                 <!-- Order details will be loaded here -->
             </div>
+        </div>
+    </div>
+    
+    <!-- Stock Update Modal -->
+    <div id="stockModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="modal-close" id="stockModalClose">&times;</span>
+            <h3 id="stockModalTitle" style="margin-bottom:20px;">Update Stock</h3>
+            <form id="stockForm">
+                <input type="hidden" id="stockProductId">
+                <div class="form-group">
+                    <label for="stockProductName">Product Name</label>
+                    <input type="text" id="stockProductName" class="form-control" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="stockCurrent">Current Stock</label>
+                    <input type="number" id="stockCurrent" class="form-control" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="stockAdjustment">Adjustment</label>
+                    <input type="number" id="stockAdjustment" class="form-control" required>
+                    <small>Positive number to add stock, negative to remove</small>
+                </div>
+                <div class="form-group">
+                    <label for="stockReason">Reason for Adjustment</label>
+                    <select id="stockReason" class="form-control">
+                        <option value="restock">Restock</option>
+                        <option value="sale">Sale</option>
+                        <option value="damaged">Damaged</option>
+                        <option value="return">Customer Return</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="stockNotes">Notes (Optional)</label>
+                    <textarea id="stockNotes" class="form-control"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Update Stock</button>
+            </form>
         </div>
     </div>
 
@@ -391,6 +557,7 @@
         let currentDateRange = 7;
         let ordersData = {};
         let productsData = {};
+        let stockHistoryData = {};
 
         auth.onAuthStateChanged(user => {
             if (user) {
@@ -455,6 +622,20 @@
             document.getElementById('productModalClose').addEventListener('click', () => document.getElementById('productModal').style.display = 'none');
             document.getElementById('productForm').addEventListener('submit', saveProduct);
             document.getElementById('orderModalClose').addEventListener('click', () => document.getElementById('orderModal').style.display = 'none');
+            document.getElementById('stockModalClose').addEventListener('click', () => document.getElementById('stockModal').style.display = 'none');
+            document.getElementById('stockForm').addEventListener('submit', updateStock);
+            
+            // Export buttons
+            document.getElementById('exportStatsPdf').addEventListener('click', () => exportStatisticsToPdf());
+            document.getElementById('exportStatsExcel').addEventListener('click', () => exportStatisticsToExcel());
+            document.getElementById('exportOrdersPdf').addEventListener('click', () => exportOrdersToPdf());
+            document.getElementById('exportOrdersExcel').addEventListener('click', () => exportOrdersToExcel());
+            document.getElementById('exportProductsPdf').addEventListener('click', () => exportProductsToPdf());
+            document.getElementById('exportProductsExcel').addEventListener('click', () => exportProductsToExcel());
+            document.getElementById('exportStockPdf').addEventListener('click', () => exportStockToPdf());
+            document.getElementById('exportStockExcel').addEventListener('click', () => exportStockToExcel());
+            document.getElementById('exportNotificationsPdf').addEventListener('click', () => exportNotificationsToPdf());
+            document.getElementById('exportNotificationsExcel').addEventListener('click', () => exportNotificationsToExcel());
         }
 
         function loadAllData() {
@@ -501,6 +682,11 @@
             });
             
             db.ref('notifications').on('value', s => renderData(s, 'notifications', renderNotificationItem, null));
+            
+            // Load stock history
+            db.ref('stockHistory').on('value', s => {
+                stockHistoryData = s.val() || {};
+            });
         }
         
         function loadStatistics(dateRange) {
@@ -725,7 +911,21 @@
             container.innerHTML = '';
             const data = snapshot.val();
             if (data) {
-                Object.keys(data).reverse().forEach(key => container.innerHTML += renderer(key, data[key]));
+                Object.keys(data).reverse().forEach(key => {
+                    if (type === 'products') {
+                        container.innerHTML += renderer(key, data[key]);
+                    } else if (type === 'orders') {
+                        container.innerHTML += renderer(key, data[key]);
+                    } else if (type === 'notifications') {
+                        container.innerHTML += renderer(key, data[key]);
+                    }
+                });
+                
+                // Also update stock management tab
+                if (type === 'products') {
+                    updateStockManagement(data);
+                }
+                
                 if (analyticsKey) {
                     if (Array.isArray(analyticsKey)) {
                         document.getElementById(analyticsKey[0]).textContent = Object.keys(data).length;
@@ -741,45 +941,93 @@
         }
         
         function renderProductItem(id, p) { 
-            return `<div class="list-item">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span>${p.name} - $${Number(p.price).toFixed(2)}</span>
-                    <div>
-                        <button onclick="editProduct('${id}')" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></button>
-                        <button onclick="deleteProduct('${id}')" class="btn btn-sm" style="background-color:var(--danger-color); margin-left:10px;"><i class="fas fa-trash"></i></button>
-                    </div>
-                </div>
-            </div>`; 
+            const stockStatus = getStockStatus(p.stock, p.lowStockAlert);
+            return `<tr>
+                <td>${p.name}</td>
+                <td>$${Number(p.price).toFixed(2)}</td>
+                <td class="stock-info ${stockStatus.class}">
+                    <span>${p.stock || 0}</span>
+                    ${p.stock <= (p.lowStockAlert || 5) ? '<i class="fas fa-exclamation-triangle"></i>' : ''}
+                </td>
+                <td><span class="status-badge ${p.status === 'active' ? 'status-active' : 'status-expired'}">${p.status || 'active'}</span></td>
+                <td>
+                    <button onclick="editProduct('${id}')" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></button>
+                    <button onclick="updateStockModal('${id}')" class="btn btn-sm" style="background-color:var(--info-color); margin-left:5px;"><i class="fas fa-boxes"></i></button>
+                    <button onclick="deleteProduct('${id}')" class="btn btn-sm" style="background-color:var(--danger-color); margin-left:5px;"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>`; 
         }
         
         function renderOrderItem(id, o) { 
             const status = o.status || 'pending';
             const statusClass = `status-${status}`;
-            return `<div class="list-item">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <strong>${o.customer?.name || 'Unknown Customer'}</strong> - $${(o.total || 0).toFixed(2)}
-                        <span class="status-badge ${statusClass}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>
-                    </div>
-                    <div>
-                        <button onclick="viewOrderDetails('${id}')" class="btn btn-sm btn-primary"><i class="fas fa-eye"></i> View</button>
-                        <button onclick="deleteOrder('${id}')" class="btn btn-sm" style="background-color:var(--danger-color); margin-left:10px;"><i class="fas fa-trash"></i></button>
-                    </div>
-                </div>
-                <small>${new Date(o.createdAt || o.timestamp || Date.now()).toLocaleString()}</small>
-            </div>`; 
+            return `<tr>
+                <td>#${id.substring(0, 8)}</td>
+                <td>${o.customer?.name || 'Unknown Customer'}</td>
+                <td>${new Date(o.createdAt || o.timestamp || Date.now()).toLocaleDateString()}</td>
+                <td>$${(o.total || 0).toFixed(2)}</td>
+                <td><span class="status-badge ${statusClass}">${status.charAt(0).toUpperCase() + status.slice(1)}</span></td>
+                <td>
+                    <button onclick="viewOrderDetails('${id}')" class="btn btn-sm btn-primary"><i class="fas fa-eye"></i> View</button>
+                    <button onclick="deleteOrder('${id}')" class="btn btn-sm" style="background-color:var(--danger-color); margin-left:5px;"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>`; 
         }
         
         function renderNotificationItem(id, n) {
             const isExpired = n.displayUntil && new Date(n.displayUntil) < new Date();
-            const status = `<span class="status-badge ${isExpired ? 'status-expired' : 'status-active'}">${isExpired ? 'Expired' : 'Active'}</span>`;
-            return `<div class="list-item">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div><strong>${n.title}</strong> ${status}</div>
+            const status = isExpired ? 'Expired' : 'Active';
+            const statusClass = isExpired ? 'status-expired' : 'status-active';
+            return `<tr>
+                <td>${n.title}</td>
+                <td>${n.message}</td>
+                <td>${n.position || 'top'}</td>
+                <td>${new Date(n.sentAt).toLocaleString()}</td>
+                <td><span class="status-badge ${statusClass}">${status}</span></td>
+                <td>
                     <button onclick="deleteNotification('${id}')" class="btn btn-sm" style="background-color:var(--danger-color);"><i class="fas fa-trash"></i></button>
-                </div>
-                <p>${n.message}</p>
-            </div>`;
+                </td>
+            </tr>`;
+        }
+        
+        function updateStockManagement(products) {
+            const stockList = document.getElementById('stockList');
+            if (!stockList) return;
+            
+            stockList.innerHTML = '';
+            
+            Object.keys(products).forEach(key => {
+                const p = products[key];
+                const stockStatus = getStockStatus(p.stock, p.lowStockAlert);
+                
+                stockList.innerHTML += `
+                    <tr>
+                        <td>${p.name}</td>
+                        <td class="stock-info ${stockStatus.class}">
+                            <span>${p.stock || 0}</span>
+                            ${p.stock <= (p.lowStockAlert || 5) ? '<i class="fas fa-exclamation-triangle"></i>' : ''}
+                        </td>
+                        <td>${p.lowStockAlert || 5}</td>
+                        <td><span class="status-badge ${stockStatus.class}">${stockStatus.text}</span></td>
+                        <td>
+                            <button onclick="updateStockModal('${key}')" class="btn btn-sm" style="background-color:var(--info-color);"><i class="fas fa-edit"></i> Update</button>
+                            <button onclick="viewStockHistory('${key}')" class="btn btn-sm btn-primary" style="margin-left:5px;"><i class="fas fa-history"></i> History</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+        
+        function getStockStatus(stock, lowStockAlert = 5) {
+            if (stock <= 0) {
+                return { class: 'stock-low', text: 'Out of Stock' };
+            } else if (stock <= lowStockAlert) {
+                return { class: 'stock-low', text: 'Low Stock' };
+            } else if (stock <= lowStockAlert * 2) {
+                return { class: 'stock-medium', text: 'Medium Stock' };
+            } else {
+                return { class: 'stock-high', text: 'In Stock' };
+            }
         }
 
         function sendNotification() {
@@ -926,9 +1174,14 @@
                     const p = s.val(); 
                     document.getElementById('productName').value = p.name; 
                     document.getElementById('productPrice').value = p.price; 
+                    document.getElementById('productStock').value = p.stock || 0;
+                    document.getElementById('productLowStockAlert').value = p.lowStockAlert || 5;
                     document.getElementById('productImageUrl').value = p.imageUrl || ''; 
                     document.getElementById('productDescription').value = p.description || ''; 
                 });
+            } else {
+                document.getElementById('productStock').value = 0;
+                document.getElementById('productLowStockAlert').value = 5;
             }
             document.getElementById('productModal').style.display = 'flex';
         }
@@ -939,16 +1192,480 @@
             const data = { 
                 name: document.getElementById('productName').value, 
                 price: parseFloat(document.getElementById('productPrice').value), 
+                stock: parseInt(document.getElementById('productStock').value),
+                lowStockAlert: parseInt(document.getElementById('productLowStockAlert').value),
                 imageUrl: document.getElementById('productImageUrl').value, 
-                description: document.getElementById('productDescription').value 
+                description: document.getElementById('productDescription').value,
+                status: 'active'
             };
             const ref = id ? db.ref(`products/${id}`) : db.ref('products').push();
-            ref.set(data).then(() => document.getElementById('productModal').style.display = 'none');
+            ref.set(data).then(() => {
+                document.getElementById('productModal').style.display = 'none';
+                
+                // Record stock history if this is a new product or stock changed
+                if (!id || (id && productsData[id] && productsData[id].stock !== data.stock)) {
+                    const stockHistory = {
+                        productId: id || ref.key,
+                        productName: data.name,
+                        previousStock: id ? (productsData[id]?.stock || 0) : 0,
+                        newStock: data.stock,
+                        adjustment: id ? (data.stock - (productsData[id]?.stock || 0)) : data.stock,
+                        reason: id ? 'product_edit' : 'new_product',
+                        timestamp: firebase.database.ServerValue.TIMESTAMP,
+                        updatedBy: auth.currentUser.email
+                    };
+                    db.ref('stockHistory').push(stockHistory);
+                }
+            });
         }
         
         window.editProduct = id => openProductModal(id);
         window.deleteProduct = id => { 
             if (confirm('Delete this product?')) db.ref(`products/${id}`).remove(); 
+        }
+        
+        window.updateStockModal = id => {
+            if (!productsData[id]) return;
+            
+            const product = productsData[id];
+            document.getElementById('stockProductId').value = id;
+            document.getElementById('stockProductName').value = product.name;
+            document.getElementById('stockCurrent').value = product.stock || 0;
+            document.getElementById('stockAdjustment').value = '';
+            document.getElementById('stockReason').value = 'restock';
+            document.getElementById('stockNotes').value = '';
+            
+            document.getElementById('stockModal').style.display = 'flex';
+        };
+        
+        function updateStock(e) {
+            e.preventDefault();
+            const productId = document.getElementById('stockProductId').value;
+            const adjustment = parseInt(document.getElementById('stockAdjustment').value);
+            const reason = document.getElementById('stockReason').value;
+            const notes = document.getElementById('stockNotes').value;
+            
+            if (!productId || isNaN(adjustment)) {
+                alert('Please enter a valid adjustment value');
+                return;
+            }
+            
+            const currentStock = parseInt(document.getElementById('stockCurrent').value);
+            const newStock = currentStock + adjustment;
+            
+            if (newStock < 0) {
+                alert('Stock cannot be negative');
+                return;
+            }
+            
+            // Update product stock
+            db.ref(`products/${productId}/stock`).set(newStock)
+                .then(() => {
+                    // Record stock history
+                    const stockHistory = {
+                        productId: productId,
+                        productName: productsData[productId].name,
+                        previousStock: currentStock,
+                        newStock: newStock,
+                        adjustment: adjustment,
+                        reason: reason,
+                        notes: notes,
+                        timestamp: firebase.database.ServerValue.TIMESTAMP,
+                        updatedBy: auth.currentUser.email
+                    };
+                    
+                    return db.ref('stockHistory').push(stockHistory);
+                })
+                .then(() => {
+                    alert('Stock updated successfully');
+                    document.getElementById('stockModal').style.display = 'none';
+                })
+                .catch(error => {
+                    alert('Error updating stock: ' + error.message);
+                });
+        }
+        
+        window.viewStockHistory = productId => {
+            if (!productId) return;
+            
+            // Create a modal to display stock history
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.style.display = 'flex';
+            
+            let historyHtml = '<h3>Stock History for ' + (productsData[productId]?.name || 'Unknown Product') + '</h3>';
+            historyHtml += '<table class="data-table"><thead><tr><th>Date</th><th>Previous</th><th>Adjustment</th><th>New Stock</th><th>Reason</th><th>Updated By</th></tr></thead><tbody>';
+            
+            // Filter and display stock history for this product
+            if (stockHistoryData) {
+                Object.keys(stockHistoryData)
+                    .filter(key => stockHistoryData[key].productId === productId)
+                    .sort((a, b) => new Date(stockHistoryData[b].timestamp) - new Date(stockHistoryData[a].timestamp))
+                    .forEach(key => {
+                        const record = stockHistoryData[key];
+                        historyHtml += `
+                            <tr>
+                                <td>${new Date(record.timestamp).toLocaleString()}</td>
+                                <td>${record.previousStock}</td>
+                                <td>${record.adjustment > 0 ? '+' : ''}${record.adjustment}</td>
+                                <td>${record.newStock}</td>
+                                <td>${record.reason}</td>
+                                <td>${record.updatedBy || 'System'}</td>
+                            </tr>
+                        `;
+                    });
+            }
+            
+            historyHtml += '</tbody></table>';
+            historyHtml += '<button onclick="this.parentElement.style.display=\'none\'" class="btn btn-primary" style="margin-top:20px;">Close</button>';
+            
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <span class="modal-close" onclick="this.parentElement.parentElement.style.display='none'">&times;</span>
+                    ${historyHtml}
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        };
+        
+        // Export Functions
+        function exportStatisticsToPdf() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(20);
+            doc.text('Eldavily - Statistics Report', 20, 20);
+            doc.setFontSize(12);
+            doc.text(`Generated on: ${new Date().toLocaleString()}`, 20, 30);
+            
+            // Add statistics data
+            let yPosition = 50;
+            doc.setFontSize(16);
+            doc.text('Key Metrics', 20, yPosition);
+            yPosition += 10;
+            
+            doc.setFontSize(12);
+            doc.text(`Revenue: $${document.getElementById('revenueStatsValue').textContent}`, 20, yPosition);
+            yPosition += 10;
+            doc.text(`Orders: ${document.getElementById('ordersStatsValue').textContent}`, 20, yPosition);
+            yPosition += 10;
+            doc.text(`Date Range: Last ${currentDateRange} days`, 20, yPosition);
+            yPosition += 20;
+            
+            // Add a simple table for top products
+            const topProductsList = document.getElementById('topProductsList');
+            if (topProductsList.children.length > 0) {
+                doc.setFontSize(16);
+                doc.text('Top Products', 20, yPosition);
+                yPosition += 10;
+                
+                doc.setFontSize(10);
+                Array.from(topProductsList.children).forEach(item => {
+                    const text = item.textContent.trim();
+                    if (yPosition > 270) {
+                        doc.addPage();
+                        yPosition = 20;
+                    }
+                    doc.text(text, 20, yPosition);
+                    yPosition += 7;
+                });
+            }
+            
+            doc.save(`Eldavily_Statistics_${new Date().toISOString().split('T')[0]}.pdf`);
+        }
+        
+        function exportStatisticsToExcel() {
+            const wb = XLSX.utils.book_new();
+            wb.SheetNames.push("Statistics");
+            
+            const data = [
+                ["Eldavily - Statistics Report"],
+                [`Generated on: ${new Date().toLocaleString()}`],
+                [""],
+                ["Key Metrics", "Value"],
+                ["Revenue", document.getElementById('revenueStatsValue').textContent],
+                ["Orders", document.getElementById('ordersStatsValue').textContent],
+                ["Date Range", `Last ${currentDateRange} days`],
+                [""],
+                ["Top Products", "Revenue"]
+            ];
+            
+            // Add top products
+            const topProductsList = document.getElementById('topProductsList');
+            Array.from(topProductsList.children).forEach(item => {
+                const text = item.textContent.trim();
+                const parts = text.split('$');
+                if (parts.length === 2) {
+                    data.push([parts[0].trim(), `$${parts[1]}`]);
+                }
+            });
+            
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            wb.Sheets["Statistics"] = ws;
+            
+            XLSX.writeFile(wb, `Eldavily_Statistics_${new Date().toISOString().split('T')[0]}.xlsx`);
+        }
+        
+        function exportOrdersToPdf() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(20);
+            doc.text('Eldavily - Orders Report', 20, 20);
+            doc.setFontSize(12);
+            doc.text(`Generated on: ${new Date().toLocaleString()}`, 20, 30);
+            
+            // Add orders table
+            const tableColumn = ["Order ID", "Customer", "Date", "Amount", "Status"];
+            const tableRows = [];
+            
+            Object.keys(ordersData).forEach(key => {
+                const order = ordersData[key];
+                const orderDate = new Date(order.createdAt || order.timestamp || Date.now());
+                const orderRow = [
+                    `#${key.substring(0, 8)}`,
+                    order.customer?.name || 'Unknown',
+                    orderDate.toLocaleDateString(),
+                    `$${(order.total || 0).toFixed(2)}`,
+                    order.status || 'pending'
+                ];
+                tableRows.push(orderRow);
+            });
+            
+            doc.autoTable({
+                head: [tableColumn],
+                body: tableRows,
+                startY: 40,
+                styles: { fontSize: 10 },
+                headStyles: { fillColor: [201, 169, 109] }
+            });
+            
+            doc.save(`Eldavily_Orders_${new Date().toISOString().split('T')[0]}.pdf`);
+        }
+        
+        function exportOrdersToExcel() {
+            const wb = XLSX.utils.book_new();
+            wb.SheetNames.push("Orders");
+            
+            const data = [
+                ["Order ID", "Customer", "Date", "Amount", "Status"]
+            ];
+            
+            Object.keys(ordersData).forEach(key => {
+                const order = ordersData[key];
+                const orderDate = new Date(order.createdAt || order.timestamp || Date.now());
+                data.push([
+                    `#${key.substring(0, 8)}`,
+                    order.customer?.name || 'Unknown',
+                    orderDate.toLocaleDateString(),
+                    order.total || 0,
+                    order.status || 'pending'
+                ]);
+            });
+            
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            wb.Sheets["Orders"] = ws;
+            
+            XLSX.writeFile(wb, `Eldavily_Orders_${new Date().toISOString().split('T')[0]}.xlsx`);
+        }
+        
+        function exportProductsToPdf() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(20);
+            doc.text('Eldavily - Products Report', 20, 20);
+            doc.setFontSize(12);
+            doc.text(`Generated on: ${new Date().toLocaleString()}`, 20, 30);
+            
+            // Add products table
+            const tableColumn = ["Product Name", "Price", "Stock", "Status"];
+            const tableRows = [];
+            
+            Object.keys(productsData).forEach(key => {
+                const product = productsData[key];
+                const stockStatus = getStockStatus(product.stock, product.lowStockAlert);
+                const productRow = [
+                    product.name,
+                    `$${Number(product.price).toFixed(2)}`,
+                    product.stock || 0,
+                    stockStatus.text
+                ];
+                tableRows.push(productRow);
+            });
+            
+            doc.autoTable({
+                head: [tableColumn],
+                body: tableRows,
+                startY: 40,
+                styles: { fontSize: 10 },
+                headStyles: { fillColor: [201, 169, 109] }
+            });
+            
+            doc.save(`Eldavily_Products_${new Date().toISOString().split('T')[0]}.pdf`);
+        }
+        
+        function exportProductsToExcel() {
+            const wb = XLSX.utils.book_new();
+            wb.SheetNames.push("Products");
+            
+            const data = [
+                ["Product Name", "Price", "Stock", "Low Stock Alert", "Status"]
+            ];
+            
+            Object.keys(productsData).forEach(key => {
+                const product = productsData[key];
+                const stockStatus = getStockStatus(product.stock, product.lowStockAlert);
+                data.push([
+                    product.name,
+                    product.price,
+                    product.stock || 0,
+                    product.lowStockAlert || 5,
+                    stockStatus.text
+                ]);
+            });
+            
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            wb.Sheets["Products"] = ws;
+            
+            XLSX.writeFile(wb, `Eldavily_Products_${new Date().toISOString().split('T')[0]}.xlsx`);
+        }
+        
+        function exportStockToPdf() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(20);
+            doc.text('Eldavily - Stock Report', 20, 20);
+            doc.setFontSize(12);
+            doc.text(`Generated on: ${new Date().toLocaleString()}`, 20, 30);
+            
+            // Add stock table
+            const tableColumn = ["Product Name", "Current Stock", "Low Stock Alert", "Status"];
+            const tableRows = [];
+            
+            Object.keys(productsData).forEach(key => {
+                const product = productsData[key];
+                const stockStatus = getStockStatus(product.stock, product.lowStockAlert);
+                const productRow = [
+                    product.name,
+                    product.stock || 0,
+                    product.lowStockAlert || 5,
+                    stockStatus.text
+                ];
+                tableRows.push(productRow);
+            });
+            
+            doc.autoTable({
+                head: [tableColumn],
+                body: tableRows,
+                startY: 40,
+                styles: { fontSize: 10 },
+                headStyles: { fillColor: [201, 169, 109] }
+            });
+            
+            doc.save(`Eldavily_Stock_${new Date().toISOString().split('T')[0]}.pdf`);
+        }
+        
+        function exportStockToExcel() {
+            const wb = XLSX.utils.book_new();
+            wb.SheetNames.push("Stock");
+            
+            const data = [
+                ["Product Name", "Current Stock", "Low Stock Alert", "Status"]
+            ];
+            
+            Object.keys(productsData).forEach(key => {
+                const product = productsData[key];
+                const stockStatus = getStockStatus(product.stock, product.lowStockAlert);
+                data.push([
+                    product.name,
+                    product.stock || 0,
+                    product.lowStockAlert || 5,
+                    stockStatus.text
+                ]);
+            });
+            
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            wb.Sheets["Stock"] = ws;
+            
+            XLSX.writeFile(wb, `Eldavily_Stock_${new Date().toISOString().split('T')[0]}.xlsx`);
+        }
+        
+        function exportNotificationsToPdf() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(20);
+            doc.text('Eldavily - Notifications Report', 20, 20);
+            doc.setFontSize(12);
+            doc.text(`Generated on: ${new Date().toLocaleString()}`, 20, 30);
+            
+            // Add notifications table
+            const tableColumn = ["Title", "Message", "Position", "Sent Date", "Status"];
+            const tableRows = [];
+            
+            db.ref('notifications').once('value').then(snapshot => {
+                const notifications = snapshot.val() || {};
+                
+                Object.keys(notifications).forEach(key => {
+                    const notification = notifications[key];
+                    const isExpired = notification.displayUntil && new Date(notification.displayUntil) < new Date();
+                    const status = isExpired ? 'Expired' : 'Active';
+                    
+                    const notificationRow = [
+                        notification.title,
+                        notification.message.length > 50 ? notification.message.substring(0, 50) + '...' : notification.message,
+                        notification.position || 'top',
+                        new Date(notification.sentAt).toLocaleDateString(),
+                        status
+                    ];
+                    tableRows.push(notificationRow);
+                });
+                
+                doc.autoTable({
+                    head: [tableColumn],
+                    body: tableRows,
+                    startY: 40,
+                    styles: { fontSize: 10 },
+                    headStyles: { fillColor: [201, 169, 109] }
+                });
+                
+                doc.save(`Eldavily_Notifications_${new Date().toISOString().split('T')[0]}.pdf`);
+            });
+        }
+        
+        function exportNotificationsToExcel() {
+            const wb = XLSX.utils.book_new();
+            wb.SheetNames.push("Notifications");
+            
+            const data = [
+                ["Title", "Message", "Position", "Sent Date", "Status"]
+            ];
+            
+            db.ref('notifications').once('value').then(snapshot => {
+                const notifications = snapshot.val() || {};
+                
+                Object.keys(notifications).forEach(key => {
+                    const notification = notifications[key];
+                    const isExpired = notification.displayUntil && new Date(notification.displayUntil) < new Date();
+                    const status = isExpired ? 'Expired' : 'Active';
+                    
+                    data.push([
+                        notification.title,
+                        notification.message,
+                        notification.position || 'top',
+                        new Date(notification.sentAt).toLocaleDateString(),
+                        status
+                    ]);
+                });
+                
+                const ws = XLSX.utils.aoa_to_sheet(data);
+                wb.Sheets["Notifications"] = ws;
+                
+                XLSX.writeFile(wb, `Eldavily_Notifications_${new Date().toISOString().split('T')[0]}.xlsx`);
+            });
         }
     </script>
 </body>
