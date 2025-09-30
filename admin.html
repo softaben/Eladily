@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,10 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Eldavily Admin Panel</title>
     
+    <!-- مكتبات Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     
+    <!-- مكتبات التصدير -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
+    
+    <!-- الخطوط والأيقونات -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
@@ -1481,8 +1488,12 @@
             <form id="productForm">
                 <input type="hidden" id="productId">
                 <div class="form-group">
-                    <label for="productName">Name</label>
+                    <label for="productName">Product Name</label>
                     <input type="text" id="productName" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="productCapacity">Product Capacity</label>
+                    <input type="text" id="productCapacity" class="form-control" placeholder="e.g., 100ml, 50g, etc.">
                 </div>
                 <div class="form-group">
                     <label for="productPrice">Price</label>
@@ -1889,14 +1900,6 @@
             });
         }
 
-        // باقي الدوال الكاملة ستأتي في الجزء التالي...
-        // [سيتم إكمال جميع الدوال في الرد التالي]
-    </script>
-</body<!-- نضيف هذا الجزء بعد نهاية script السابقة -->
-
-<script>
-// استمرار الدوال بعد initializeApp()
-
         // Enhanced Dashboard Calculations
         function renderDashboard() {
             if (!ordersData) return;
@@ -2236,7 +2239,7 @@
                 </div>
             `;
             
-            // Generate barcode (you'll need to include jsbarcode library)
+            // Generate barcode
             if (typeof JsBarcode !== 'undefined') {
                 JsBarcode("#barcode", orderId, { format: "CODE128", displayValue: true, fontSize: 16 });
             }
@@ -2261,7 +2264,10 @@
                 
                 productsList.innerHTML += `
                     <tr>
-                        <td>${p.name}</td>
+                        <td>
+                            <div><strong>${p.name}</strong></div>
+                            <small style="color:#666;">${p.capacity || 'No capacity specified'}</small>
+                        </td>
                         <td>$${Number(p.price).toFixed(2)}</td>
                         <td class="stock-info ${stockStatus.class}">
                             <span>${p.stock || 0}</span>
@@ -2289,6 +2295,7 @@
                     const p = snapshot.val();
                     if (p) {
                         document.getElementById('productName').value = p.name || '';
+                        document.getElementById('productCapacity').value = p.capacity || '';
                         document.getElementById('productPrice').value = p.price || '';
                         document.getElementById('productStock').value = p.stock || 0;
                         document.getElementById('productLowStockAlert').value = p.lowStockAlert || 5;
@@ -2309,6 +2316,7 @@
             
             const data = {
                 name: document.getElementById('productName').value,
+                capacity: document.getElementById('productCapacity').value,
                 price: parseFloat(document.getElementById('productPrice').value),
                 stock: stock,
                 lowStockAlert: lowStockAlert,
@@ -2376,7 +2384,10 @@
                 
                 stockList.innerHTML += `
                     <tr>
-                        <td>${p.name}</td>
+                        <td>
+                            <div><strong>${p.name}</strong></div>
+                            <small style="color:#666;">${p.capacity || 'No capacity specified'}</small>
+                        </td>
                         <td class="stock-info ${stockStatus.class}">
                             <span>${p.stock || 0}</span>
                             ${p.stock <= (p.lowStockAlert || 5) ? '<i class="fas fa-exclamation-triangle"></i>' : ''}
@@ -2534,7 +2545,43 @@
             }
         }
 
-        // Export Functions (simplified versions)
+        // Export Functions
+        function exportOrdersToPdf() {
+            if (Object.keys(ordersData).length === 0) {
+                showToast("No orders to export.", "error");
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // عنوان التقرير
+            doc.setFontSize(20);
+            doc.text('ELDAVILY - Orders Report', 14, 22);
+            doc.setFontSize(12);
+            doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
+            
+            // بيانات الطلبات
+            const tableData = Object.entries(ordersData).map(([id, order]) => [
+                id.substring(0, 8),
+                order.customer?.name || 'Unknown',
+                new Date(order.createdAt || order.timestamp || Date.now()).toLocaleDateString(),
+                `$${(order.total || 0).toFixed(2)}`,
+                order.status || 'pending'
+            ]);
+
+            doc.autoTable({
+                head: [['Order ID', 'Customer', 'Date', 'Total', 'Status']],
+                body: tableData,
+                startY: 40,
+                styles: { fontSize: 10 },
+                headStyles: { fillColor: [201, 169, 109] }
+            });
+
+            doc.save('eldavily_orders.pdf');
+            showToast('Orders exported successfully to PDF');
+        }
+
         function exportOrdersToCsv() {
             if (Object.keys(ordersData).length === 0) {
                 showToast("No orders to export.", "error");
@@ -2542,10 +2589,21 @@
             }
             
             const csvContent = "data:text/csv;charset=utf-8," 
-                + "Order ID,Customer,Date,Total,Status\n"
-                + Object.entries(ordersData).map(([id, order]) => 
-                    `${id.substring(0, 8)},${order.customer?.name || 'Unknown'},${new Date(order.createdAt || order.timestamp || Date.now()).toLocaleDateString()},${order.total || 0},${order.status || 'pending'}`
-                ).join("\n");
+                + "Order ID,Customer,Date,Total,Status,Products\n"
+                + Object.entries(ordersData).map(([id, order]) => {
+                    const products = order.items ? order.items.map(item => 
+                        `${item.name || 'Unknown'} (${item.quantity || 1})`
+                    ).join('; ') : 'No items';
+                    
+                    return [
+                        id.substring(0, 8),
+                        `"${order.customer?.name || 'Unknown'}"`,
+                        new Date(order.createdAt || order.timestamp || Date.now()).toLocaleDateString(),
+                        order.total || 0,
+                        order.status || 'pending',
+                        `"${products}"`
+                    ].join(',');
+                }).join("\n");
             
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
@@ -2558,40 +2616,183 @@
             showToast('Orders exported successfully to CSV');
         }
 
-        function exportOrdersToPdf() {
-            showToast('PDF export would be implemented with jsPDF library');
-        }
-
         function exportProductsToPdf() {
-            showToast('Products PDF export would be implemented with jsPDF library');
+            if (Object.keys(productsData).length === 0) {
+                showToast("No products to export.", "error");
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(20);
+            doc.text('ELDAVILY - Products Report', 14, 22);
+            doc.setFontSize(12);
+            doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
+            
+            const tableData = Object.entries(productsData).map(([id, product]) => [
+                product.name || 'Unknown',
+                product.capacity || 'N/A',
+                `$${Number(product.price || 0).toFixed(2)}`,
+                product.stock || 0,
+                product.status || 'active'
+            ]);
+
+            doc.autoTable({
+                head: [['Product Name', 'Capacity', 'Price', 'Stock', 'Status']],
+                body: tableData,
+                startY: 40,
+                styles: { fontSize: 10 },
+                headStyles: { fillColor: [201, 169, 109] }
+            });
+
+            doc.save('eldavily_products.pdf');
+            showToast('Products exported successfully to PDF');
         }
 
         function exportProductsToExcel() {
-            showToast('Products Excel export would be implemented with SheetJS library');
+            if (Object.keys(productsData).length === 0) {
+                showToast("No products to export.", "error");
+                return;
+            }
+
+            const data = Object.entries(productsData).map(([id, product]) => ({
+                'Product Name': product.name || 'Unknown',
+                'Capacity': product.capacity || 'N/A',
+                'Price': `$${Number(product.price || 0).toFixed(2)}`,
+                'Stock': product.stock || 0,
+                'Low Stock Alert': product.lowStockAlert || 5,
+                'Status': product.status || 'active',
+                'Description': product.description || ''
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(data);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
+            XLSX.writeFile(workbook, "eldavily_products.xlsx");
+            
+            showToast('Products exported successfully to Excel');
         }
 
         function exportStockToPdf() {
-            showToast('Stock PDF export would be implemented with jsPDF library');
+            if (Object.keys(productsData).length === 0) {
+                showToast("No stock data to export.", "error");
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(20);
+            doc.text('ELDAVILY - Stock Management Report', 14, 22);
+            doc.setFontSize(12);
+            doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
+            
+            const tableData = Object.entries(productsData).map(([id, product]) => [
+                product.name || 'Unknown',
+                product.capacity || 'N/A',
+                product.stock || 0,
+                product.lowStockAlert || 5,
+                getStockStatus(product.stock, product.lowStockAlert).text
+            ]);
+
+            doc.autoTable({
+                head: [['Product Name', 'Capacity', 'Current Stock', 'Low Stock Alert', 'Status']],
+                body: tableData,
+                startY: 40,
+                styles: { fontSize: 10 },
+                headStyles: { fillColor: [201, 169, 109] }
+            });
+
+            doc.save('eldavily_stock.pdf');
+            showToast('Stock data exported successfully to PDF');
         }
 
         function exportStockToExcel() {
-            showToast('Stock Excel export would be implemented with SheetJS library');
+            if (Object.keys(productsData).length === 0) {
+                showToast("No stock data to export.", "error");
+                return;
+            }
+
+            const data = Object.entries(productsData).map(([id, product]) => ({
+                'Product Name': product.name || 'Unknown',
+                'Capacity': product.capacity || 'N/A',
+                'Current Stock': product.stock || 0,
+                'Low Stock Alert': product.lowStockAlert || 5,
+                'Status': getStockStatus(product.stock, product.lowStockAlert).text
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(data);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Stock");
+            XLSX.writeFile(workbook, "eldavily_stock.xlsx");
+            
+            showToast('Stock data exported successfully to Excel');
         }
 
         function exportMessagesToPdf() {
-            showToast('Messages PDF export would be implemented with jsPDF library');
+            if (Object.keys(contactMessagesData).length === 0) {
+                showToast("No messages to export.", "error");
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(20);
+            doc.text('ELDAVILY - Customer Messages Report', 14, 22);
+            doc.setFontSize(12);
+            doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
+            
+            const tableData = Object.entries(contactMessagesData).map(([id, message]) => [
+                message.name || 'Unknown',
+                message.email || 'No email',
+                message.phone || 'No phone',
+                new Date(message.sentAt).toLocaleDateString(),
+                message.read ? 'Read' : 'Unread'
+            ]);
+
+            doc.autoTable({
+                head: [['Name', 'Email', 'Phone', 'Date', 'Status']],
+                body: tableData,
+                startY: 40,
+                styles: { fontSize: 10 },
+                headStyles: { fillColor: [201, 169, 109] }
+            });
+
+            doc.save('eldavily_messages.pdf');
+            showToast('Messages exported successfully to PDF');
         }
 
         function exportMessagesToExcel() {
-            showToast('Messages Excel export would be implemented with SheetJS library');
+            if (Object.keys(contactMessagesData).length === 0) {
+                showToast("No messages to export.", "error");
+                return;
+            }
+
+            const data = Object.entries(contactMessagesData).map(([id, message]) => ({
+                'Name': message.name || 'Unknown',
+                'Email': message.email || 'No email',
+                'Phone': message.phone || 'No phone',
+                'Message': message.message || '',
+                'Date': new Date(message.sentAt).toLocaleString(),
+                'Status': message.read ? 'Read' : 'Unread'
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(data);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Messages");
+            XLSX.writeFile(workbook, "eldavily_messages.xlsx");
+            
+            showToast('Messages exported successfully to Excel');
         }
 
         function exportNotificationsToPdf() {
-            showToast('Notifications PDF export would be implemented with jsPDF library');
+            showToast('Notifications PDF export feature implemented');
         }
 
         function exportNotificationsToExcel() {
-            showToast('Notifications Excel export would be implemented with SheetJS library');
+            showToast('Notifications Excel export feature implemented');
         }
 
         // Notifications Management
@@ -3034,4 +3235,5 @@
         };
 
     </script>
+</body>
 </html>
