@@ -828,8 +828,8 @@
                         <input type="tel" id="phone" required>
                     </div>
                     <div class="form-group">
-                        <label for="email">Email *</label>
-                        <input type="email" id="email" required>
+                        <label for="email">Email (Optional)</label>
+                        <input type="email" id="email">
                     </div>
                     <button type="submit" class="btn-place-order">Place Order</button>
                 </form>
@@ -1276,7 +1276,7 @@
                     name: document.getElementById('name').value, 
                     address: document.getElementById('address').value, 
                     phone: document.getElementById('phone').value,
-                    email: document.getElementById('email').value 
+                    email: document.getElementById('email').value || '' // Email is optional
                 }, 
                 items: cart,
                 subtotal: subtotal,
