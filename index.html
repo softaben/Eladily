@@ -253,6 +253,15 @@
             font-size: 22px;
         }
         
+        /* CSS Class for Product Description */
+        .product-description {
+            font-size: 14px;
+            color: #666;
+            margin: 10px 0 15px 0;
+            padding: 0 15px;
+            min-height: 40px;
+        }
+
         .product-price {
             color: var(--text-color);
             font-size: 18px;
@@ -688,8 +697,7 @@
         <section id="categories" class="categories-section container">
             <h2 class="section-title reveal">Shop By Category</h2>
             <div class="categories-grid" id="categoriesGrid">
-                <!-- Categories will be loaded here -->
-            </div>
+                </div>
         </section>
 
         <section id="products" class="products-section container">
@@ -997,6 +1005,7 @@
                         </div>
                         <div class="product-info">
                             <h3>${p.name} ${saleBadge}</h3>
+                            <p class="product-description">${p.description || 'No description available.'}</p>
                             ${priceDisplay}
                             <span class="stock-status ${stockStatus.class}">${stockStatus.text}</span>
                         </div>
@@ -1009,7 +1018,7 @@
                 productsGrid.innerHTML += cardHTML;
             });
             
-            document.querySelectorAll('.btn-add').forEach(b => {
+            document.querySelectorAll('#productsGrid .btn-add').forEach(b => {
                 if (!b.disabled) {
                     b.addEventListener('click', handleAddToCart);
                 }
@@ -1042,6 +1051,7 @@
                         </div>
                         <div class="product-info">
                             <h3>${p.name} ${saleBadge}</h3>
+                            <p class="product-description">${p.description || 'No description available.'}</p>
                             ${priceDisplay}
                             <span class="stock-status ${stockStatus.class}">${stockStatus.text}</span>
                         </div>
