@@ -806,19 +806,19 @@
                 </div>
                 <div class="cart-subtotal">
                     <span>Subtotal</span>
-                    <span id="cart-subtotal-price">$0.00</span>
+                    <span id="cart-subtotal-price">0.00 MAD</span>
                 </div>
                 <div class="cart-discount" id="discountSection" style="display: none;">
                     <span>Discount</span>
-                    <span id="discount-amount">-$0.00</span>
+                    <span id="discount-amount">-0.00 MAD</span>
                 </div>
                 <div class="cart-shipping" id="shippingSection">
                     <span>Standard Shipping</span>
-                    <span id="shipping-cost">$0.00</span>
+                    <span id="shipping-cost">0.00 MAD</span>
                 </div>
                 <div class="cart-total">
                     <span>Total</span>
-                    <span id="cart-total-price">$0.00</span>
+                    <span id="cart-total-price">0.00 MAD</span>
                 </div>
                 <button class="btn-checkout" id="checkoutBtn" disabled>Proceed to Checkout</button>
             </div>
@@ -1035,8 +1035,8 @@
                 const stockStatus = getStockStatus(p.stock, p.lowStockAlert);
                 const saleBadge = p.salePrice ? `<span class="product-sale-badge">SALE</span>` : '';
                 const priceDisplay = p.salePrice ? 
-                    `<span class="product-original-price">$${Number(p.price).toFixed(2)}</span> <span class="product-price">$${Number(p.salePrice).toFixed(2)}</span>` :
-                    `<span class="product-price">$${Number(p.price).toFixed(2)}</span>`;
+                    `<span class="product-original-price">${Number(p.price).toFixed(2)} MAD</span> <span class="product-price">${Number(p.salePrice).toFixed(2)} MAD</span>` :
+                    `<span class="product-price">${Number(p.price).toFixed(2)} MAD</span>`;
                 
                 const cardHTML = `
                     <div class="product-card reveal" data-category="${p.category || ''}">
@@ -1081,8 +1081,8 @@
                 const stockStatus = getStockStatus(p.stock, p.lowStockAlert);
                 const saleBadge = p.salePrice ? `<span class="product-sale-badge">SALE</span>` : '';
                 const priceDisplay = p.salePrice ? 
-                    `<span class="product-original-price">$${Number(p.price).toFixed(2)}</span> <span class="product-price">$${Number(p.salePrice).toFixed(2)}</span>` :
-                    `<span class="product-price">$${Number(p.price).toFixed(2)}</span>`;
+                    `<span class="product-original-price">${Number(p.price).toFixed(2)} MAD</span> <span class="product-price">${Number(p.salePrice).toFixed(2)} MAD</span>` :
+                    `<span class="product-price">${Number(p.price).toFixed(2)} MAD</span>`;
                 
                 const cardHTML = `
                     <div class="product-card reveal">
@@ -1180,8 +1180,8 @@
                             <img src="${item.image}" alt="${item.name}">
                             <div class="cart-item-details">
                                 <h4>${item.name}</h4>
-                                <p>$${item.price.toFixed(2)} x ${item.quantity}</p>
-                                <p>$${(item.price * item.quantity).toFixed(2)}</p>
+                                <p>${item.price.toFixed(2)} MAD x ${item.quantity}</p>
+                                <p>${(item.price * item.quantity).toFixed(2)} MAD</p>
                             </div>
                             <button class="cart-item-remove" data-index="${index}">&times; Remove</button>
                         </div>
@@ -1218,13 +1218,13 @@
             
             const total = subtotal - discount + shippingCost;
             
-            subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
-            shippingEl.textContent = `$${shippingCost.toFixed(2)}`;
-            totalEl.textContent = `$${total.toFixed(2)}`;
+            subtotalEl.textContent = `${subtotal.toFixed(2)} MAD`;
+            shippingEl.textContent = `${shippingCost.toFixed(2)} MAD`;
+            totalEl.textContent = `${total.toFixed(2)} MAD`;
             
             if (discount > 0) {
                 discountSection.style.display = 'flex';
-                discountAmountEl.textContent = `-$${discount.toFixed(2)}`;
+                discountAmountEl.textContent = `-${discount.toFixed(2)} MAD`;
             } else {
                 discountSection.style.display = 'none';
             }
