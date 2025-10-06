@@ -511,6 +511,7 @@
         }
         .cart-subtotal { display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; margin-bottom: 10px; }
         .cart-discount { display: flex; justify-content: space-between; font-size: 16px; margin-bottom: 10px; color: var(--success-color); }
+        .cart-shipping { display: flex; justify-content: space-between; font-size: 16px; margin-bottom: 10px; }
         .cart-total { display: flex; justify-content: space-between; font-size: 20px; font-weight: bold; margin-bottom: 20px; border-top: 1px solid #eee; padding-top: 10px; }
         .coupon-section { margin-bottom: 15px; }
         .coupon-input { display: flex; gap: 10px; }
@@ -811,6 +812,10 @@
                     <span>Discount</span>
                     <span id="discount-amount">-$0.00</span>
                 </div>
+                <div class="cart-shipping" id="shippingSection">
+                    <span>Standard Shipping</span>
+                    <span id="shipping-cost">$0.00</span>
+                </div>
                 <div class="cart-total">
                     <span>Total</span>
                     <span id="cart-total-price">$0.00</span>
@@ -869,6 +874,11 @@
         let categoriesData = {};
         let couponsData = {};
         let appliedCoupon = null;
+        let shippingSettings = {
+            baseCost: 5,
+            increaseThreshold: 2,
+            increasePercentage: 10
+        };
 
         function loadStoreData() {
             // Load background settings
@@ -913,7 +923,37 @@
                 couponsData = snapshot.val() || {};
             });
 
+            // Load shipping settings
+            database.ref('admin/shippingSettings').on('value', snapshot => {
+                const settings = snapshot.val();
+                if (settings) {
+                    shippingSettings = {
+                        baseCost: settings.baseCost || 5,
+                        increaseThreshold: settings.increaseThreshold || 2,
+                        increasePercentage: settings.increasePercentage || 10
+                    };
+                }
+                updateCartUI(); // Update cart to reflect new shipping costs
+            });
+
             trackStoreVisit();
+        }
+
+        function calculateShippingCost() {
+            const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
+            
+            if (totalItems === 0) return 0;
+            
+            let shippingCost = shippingSettings.baseCost;
+            
+            // Increase shipping cost if items exceed threshold
+            if (totalItems > shippingSettings.increaseThreshold) {
+                const extraItems = totalItems - shippingSettings.increaseThreshold;
+                const increaseAmount = shippingCost * (shippingSettings.increasePercentage / 100);
+                shippingCost += extraItems * increaseAmount;
+            }
+            
+            return parseFloat(shippingCost.toFixed(2));
         }
 
         function loadNotifications() {
@@ -1123,6 +1163,7 @@
             const cartBody = document.querySelector('.cart-body');
             const subtotalEl = document.getElementById('cart-subtotal-price');
             const totalEl = document.getElementById('cart-total-price');
+            const shippingEl = document.getElementById('shipping-cost');
             const countEl = document.querySelector('.cart-count');
             const checkoutBtn = document.getElementById('checkoutBtn');
             cartBody.innerHTML = '';
@@ -1163,19 +1204,22 @@
         function updateCartTotals() {
             const subtotalEl = document.getElementById('cart-subtotal-price');
             const totalEl = document.getElementById('cart-total-price');
+            const shippingEl = document.getElementById('shipping-cost');
             const discountSection = document.getElementById('discountSection');
             const discountAmountEl = document.getElementById('discount-amount');
             
             const subtotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+            const shippingCost = calculateShippingCost();
             
             let discount = 0;
             if (appliedCoupon) {
                 discount = subtotal * (appliedCoupon.discount / 100);
             }
             
-            const total = subtotal - discount;
+            const total = subtotal - discount + shippingCost;
             
             subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
+            shippingEl.textContent = `$${shippingCost.toFixed(2)}`;
             totalEl.textContent = `$${total.toFixed(2)}`;
             
             if (discount > 0) {
@@ -1279,7 +1323,8 @@
             
             const subtotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
             const discount = appliedCoupon ? subtotal * (appliedCoupon.discount / 100) : 0;
-            const total = subtotal - discount;
+            const shippingCost = calculateShippingCost();
+            const total = subtotal - discount + shippingCost;
             
             const orderData = { 
                 customer: { 
@@ -1291,6 +1336,7 @@
                 items: cart,
                 subtotal: subtotal,
                 discount: discount,
+                shipping: shippingCost,
                 total: total,
                 coupon: appliedCoupon ? appliedCoupon.code : null,
                 status: 'pending', 
